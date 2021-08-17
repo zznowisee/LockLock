@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea3049fc29bb8d44ab8c7b189c61a2d9, type: 3}
+  m_Name: StationPalette
+  m_EditorClassIdentifier: 
+  a: {r: 0, g: 1, b: 0.8235294, a: 1}
+  b: {r: 0.92136747, g: 0.7688679, b: 1, a: 1}
+  c: {r: 0.6462264, g: 1, b: 0.68550104, a: 1}
+  d: {r: 1, g: 0.5801887, b: 0.6276392, a: 1}
