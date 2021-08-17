@@ -28,18 +28,19 @@ public static class MeshGenerator
         public Vector3[] vertices;
         public int[] triangles;
 
-        public MeshData(float r)
+        public MeshData(float width)
         {
             vertices = new Vector3[]
             {
-                new Vector2(0, r * 2 / 4),
-                new Vector2(r, -r * 2),
-                new Vector2(-r,-2 * r)
+                new Vector2(0, width / 2),
+                new Vector2(1, width / 2),
+                new Vector2(0, -width / 2),
+                new Vector2(1, -width / 2)
             };
 
             triangles = new int[]
             {
-                0,1,2
+                0,1,2,1,2,3
             };
         }
     }

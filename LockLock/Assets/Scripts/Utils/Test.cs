@@ -4,17 +4,20 @@ using UnityEngine;
 
 public class Test : MonoBehaviour
 {
-    LineRenderer line;
+    public Material material;
+    Transform mesh;
     private void Awake()
     {
-        line = gameObject.AddComponent<LineRenderer>();
+        mesh = MeshGenerator.GenerateMesh(material, 6, "Bird", transform);
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Time.timeScale = 0;
-        }
+        //mesh.GetComponent<MeshFilter>().mesh.vertices[1] = 
+    }
+
+    public void GenerateMesh()
+    {
+        Transform mesh = MeshGenerator.GenerateMesh(material, 0.5f, "Bird", transform);
     }
 }

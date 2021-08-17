@@ -46,6 +46,9 @@ public class Line : MonoBehaviour
 
     int length = 1;
 
+    LineVisual lineVisual;
+    [SerializeField] float lineWidth = 0.5f;
+
     public Vector2 LineCenterPos
     {
         get
@@ -89,15 +92,18 @@ public class Line : MonoBehaviour
     {
         hasBeenSetup = true;
 
+        lineVisual = transform.Find("lineVisual").GetComponent<LineVisual>();
         lineRenderer = GetComponent<LineRenderer>();
         edgeColl = GetComponent<EdgeCollider2D>();
         wayPoints = new List<WayPoint>();
+
+        lineVisual.Setup(transform.position, normalMat);
 
         lineRenderer.positionCount = 2;
         lineRenderer.SetPosition(0, position);
         lineRenderer.SetPosition(1, position);
 
-        this.switchStartNode = startNode;
+        switchStartNode = startNode;
         this.lineState = lineState;
 
         oneWayMark = transform.Find("oneWayMark");

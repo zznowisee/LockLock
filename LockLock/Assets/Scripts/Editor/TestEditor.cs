@@ -12,7 +12,7 @@ public class TestEditor : Editor
         Test test = target as Test;
         if(GUILayout.Button("Generate Mesh"))
         {
-            //test.GenerateMesh();
+            test.GenerateMesh();
         }
     }
 }

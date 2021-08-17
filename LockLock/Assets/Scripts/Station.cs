@@ -7,11 +7,13 @@ public class Station : MonoBehaviour
 {
     [SerializeField] StationTrainPalette palette;
 
-    public StationNumber stationNumber;
+    StationNumber stationNumber;
     Node stayNode;
     TextMeshPro stationTypeText;
 
     SpriteRenderer spriteRenderer;
+
+    public StationNumber StationNumber { get { return stationNumber; } }
 
     public void Setup(Node stayNode, int index)
     {

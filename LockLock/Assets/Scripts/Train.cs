@@ -48,7 +48,6 @@ public class Train : MonoBehaviour
 
     public void Setup(Node startNode, int index)
     {
-        print("Im a train");
         meshRenderer = transform.Find("sprite").GetComponent<MeshRenderer>();
         trainTypeText = transform.Find("trainTypeText").GetComponent<TextMeshPro>();
         preNode = currentNode = startNode;
@@ -133,9 +132,8 @@ public class Train : MonoBehaviour
     {
         if(currentNode.Station != null)
         {
-            if (currentNode.Station.stationNumber == trainNumber)
+            if (currentNode.Station.StationNumber == trainNumber)
             {
-                print("Same Number");
                 currentNode.ClearStation();
                 Destroy(gameObject);
             }

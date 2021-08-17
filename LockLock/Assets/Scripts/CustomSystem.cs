@@ -37,8 +37,8 @@ public class CustomSystem : MonoBehaviour
         Play
     }
 
-    int stationIndex = -1;
-    int trainIndex = -1;
+    int[] stationIndices;
+    int[] trainIndices;
 
     public GameState gameState = GameState.Edit;
     public InputState inputState = InputState.NullSelect;
@@ -57,6 +57,11 @@ public class CustomSystem : MonoBehaviour
     private void Awake()
     {
         nodeParent = transform.Find("nodeParent");
+
+        trainIndices = stationIndices = new int[]
+        {
+            -1,-1,-1,-1
+        };
     }
 
     void Start()
@@ -161,6 +166,7 @@ public class CustomSystem : MonoBehaviour
                     SpawnNewStation();
                     SetNodeAsLineController();
                     DeleteTrain();
+                    DeleteStation();
                     break;
                 case InputState.LineSelect:
                     SelectNode();
@@ -185,10 +191,139 @@ public class CustomSystem : MonoBehaviour
         {
             if (currentNode.Train != null)
             {
+                int index = -1;
+                switch (currentNode.Train.TrainNumber)
+                {
+                    case StationNumber.A:
+                        index = 0;
+                        break;
+                    case StationNumber.B:
+                        index = 1;
+                        break;
+                    case StationNumber.C:
+                        index = 2;
+                        break;
+                    case StationNumber.D:
+                        index = 3;
+                        break;
+                }
+
+                for (int i = 0; i < trainIndices.Length; i++)
+                {
+                    if(i == index)
+                    {
+                        trainIndices[i] = -1;
+                        break;
+                    }
+                }
+
+                for (int i = 0; i < activeTrains.Count; i++)
+                {
+                    if(activeTrains[i].movedTrain == currentNode.Train)
+                    {
+                        activeTrains.RemoveAt(i);
+                        break;
+                    }
+                }
+
                 Destroy(currentNode.Train.gameObject);
                 currentNode.ClearTrain();
-                trainIndex--;
             }
+        }
+    }
+
+    void DeleteStation()
+    {
+        if (Input.GetKeyDown(KeyCode.Delete))
+        {
+            if(currentNode.Station != null)
+            {
+                int index = -1;
+                switch (currentNode.Station.StationNumber)
+                {
+                    case StationNumber.A:
+                        index = 0;
+                        break;
+                    case StationNumber.B:
+                        index = 1;
+                        break;
+                    case StationNumber.C:
+                        index = 2;
+                        break;
+                    case StationNumber.D:
+                        index = 3;
+                        break;
+                }
+
+                for (int i = 0; i < stationIndices.Length; i++)
+                {
+                    if (i == index)
+                    {
+                        stationIndices[i] = -1;
+                        break;
+                    }
+                }
+
+                Destroy(currentNode.Station.gameObject);
+                currentNode.ClearStation();
+            }
+        }
+    }
+
+    void SpawnNewTrain()
+    {
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            if (currentNode.Train != null)
+            {
+                return;
+            }
+
+            int index = -1;
+            for (int i = 0; i < trainIndices.Length; i++)
+            {
+                if (trainIndices[i] == -1)
+                {
+                    trainIndices[i] = i;
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index == -1) return;
+            Train train = Instantiate(pfTrain, currentNode.transform.position, Quaternion.identity).GetComponent<Train>();
+            currentNode.SetTrain(train);
+            train.Setup(currentNode, index);
+
+            activeTrains.Add(new TrainInfo() { movedTrain = train, startNode = currentNode, rotation = train.transform.rotation });
+        }
+    }
+
+    void SpawnNewStation()
+    {
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            if(currentNode.Station != null)
+            {
+                return;
+            }
+
+            int index = -1;
+            for (int i = 0; i < stationIndices.Length; i++)
+            {
+                if (stationIndices[i] == -1)
+                {
+                    stationIndices[i] = i;
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index == -1) return;
+            Station station = Instantiate(pfStation, currentNode.transform.position, Quaternion.identity).GetComponent<Station>();
+            currentNode.SetStation(station);
+            station.Setup(currentNode, index);
+            stations.Add(station);
         }
     }
 
@@ -210,53 +345,6 @@ public class CustomSystem : MonoBehaviour
                 currentControlLine.SetControlByNode();
                 print($"{currentNode.gameObject.name} : Set As Line Controller");
             }
-        }
-    }
-
-    void SpawnNewTrain()
-    {
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            if(currentNode.Train != null)
-            {
-                return;
-            }
-
-            trainIndex++;
-            if (trainIndex > 3) return;
-            Train train = Instantiate(pfTrain, currentNode.transform.position, Quaternion.identity).GetComponent<Train>();
-            currentNode.SetTrain(train);
-            train.Setup(currentNode, trainIndex);
-
-            activeTrains.Add(new TrainInfo() { movedTrain = train, startNode = currentNode, rotation = train.transform.rotation });
-        }
-    }
-
-    void OnTrainArrived(Node arriveNode)
-    {
-        if (arriveNode.Station != null)
-        {
-            stations.Remove(arriveNode.Station);
-        }
-
-        if (CheckWin())
-        {
-
-        }
-    }
-
-    bool CheckWin() => stations.Count == 0;
-
-    void SpawnNewStation()
-    {
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            stationIndex++;
-            if (stationIndex > 3) return;
-            Station station = Instantiate(pfStation, currentNode.transform.position, Quaternion.identity).GetComponent<Station>();
-            currentNode.SetStation(station);
-            station.Setup(currentNode, stationIndex);
-            stations.Add(station);
         }
     }
 
@@ -329,7 +417,8 @@ public class CustomSystem : MonoBehaviour
                 currentWayPoint = null;
             }
 
-            currentNode.DrawLine();
+            Vector2 endPosition = GetLineEndPosition(InputHelper.MouseWorldPositionIn2D);
+            currentNode.DrawLine(endPosition);
         }
 
         if (Input.GetMouseButtonUp(0))
@@ -358,6 +447,20 @@ public class CustomSystem : MonoBehaviour
                 inputState = InputState.NodeSelect;
             }
         }
+    }
+
+    Vector2 GetLineEndPosition(Vector2 mousePos)
+    {
+        Node closestNode = null;
+        Collider2D[] aroundNodes = Physics2D.OverlapCircleAll(mousePos, 6f, nodeLayer);
+
+        float minSqrDst = float.MaxValue;
+        foreach(Collider2D collider in aroundNodes)
+        {
+            //if()
+        }
+
+        return mousePos;
     }
 
     void SelectNode()

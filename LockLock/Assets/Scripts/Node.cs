@@ -38,17 +38,9 @@ public class Node : MonoBehaviour
     bool isLineController = false;
 
     public Vector2Int GlobalIndex { get { return globalIndex; } }
-    public Station Station
-    {
-        get
-        {
-            return station;
-        }
-    }
-    public Train Train
-    {
-        get { return stayTrain; }
-    }
+    public Station Station { get { return station; } }
+    public Train Train { get { return stayTrain; } }
+
     public void SetTrain(Train newTrain) => stayTrain = newTrain;
     public void ClearTrain() => stayTrain = null;
     public void SetStation(Station station_) => station = station_;
@@ -167,7 +159,7 @@ public class Node : MonoBehaviour
     public void BeSelect() => beSelectGraphic.gameObject.SetActive(true);
     public void CancelSelect() => beSelectGraphic.gameObject.SetActive(false);
 
-    public void DrawLine()
+    public void DrawLine(Vector3 endPosition)
     {
         if (currentLine == null)
         {
@@ -202,7 +194,7 @@ public class Node : MonoBehaviour
             }
         }
 
-        currentLine.Draw(InputHelper.MouseWorldPositionIn2D);
+        currentLine.Draw(endPosition);
     }
 
     public void FinishDraw(ref Node nextNode)
