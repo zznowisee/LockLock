@@ -163,7 +163,7 @@ public class Node : MonoBehaviour
     {
         if (currentLine == null)
         {
-            currentLine = Instantiate(pfLine, transform.position, Quaternion.identity, lineParent);
+            currentLine = Instantiate(pfLine, transform.position, Quaternion.identity);
         }
         if (!currentLine.hasBeenSetup)
         {

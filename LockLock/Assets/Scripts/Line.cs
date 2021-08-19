@@ -15,7 +15,7 @@ public class Line : MonoBehaviour
     [Header("Mark Prefabs")]
     [SerializeField] Transform pfMarkLine;
 
-    LineRenderer lineRenderer;
+    //LineRenderer lineRenderer;
     EdgeCollider2D edgeColl;
 
     public bool hasBeenSetup = false;
@@ -91,35 +91,44 @@ public class Line : MonoBehaviour
     public void Setup(Vector3 position, Node startNode, LineState lineState)
     {
         hasBeenSetup = true;
-
-        lineVisual = transform.Find("lineVisual").GetComponent<LineVisual>();
-        lineRenderer = GetComponent<LineRenderer>();
+        
+        //lineRenderer = GetComponent<LineRenderer>();
         edgeColl = GetComponent<EdgeCollider2D>();
         wayPoints = new List<WayPoint>();
 
-        lineVisual.Setup(transform.position, normalMat);
+        lineVisual = transform.Find("lineVisual").GetComponent<LineVisual>();
+        lineVisual.Setup(position);
 
-        lineRenderer.positionCount = 2;
-        lineRenderer.SetPosition(0, position);
-        lineRenderer.SetPosition(1, position);
+        //lineRenderer.positionCount = 2;
+        //lineRenderer.SetPosition(0, position);
+        //lineRenderer.SetPosition(1, position);
 
         switchStartNode = startNode;
         this.lineState = lineState;
-
+        
         oneWayMark = transform.Find("oneWayMark");
         switch (this.lineState)
         {
             case LineState.Using:
-                lineRenderer.material = dottedMat;
-                lineRenderer.material.color = palette.dottedUsingCol;
+                lineVisual.Material = dottedMat;
+                lineVisual.Material.color = palette.dottedUsingCol;
+
+                //lineRenderer.material = dottedMat;
+                //lineRenderer.material.color = palette.dottedUsingCol;
                 break;
             case LineState.Waiting:
-                lineRenderer.material = dottedMat;
-                lineRenderer.material.color = palette.dottedWaitingCol;
+                lineVisual.Material = dottedMat;
+                lineVisual.Material.color = palette.dottedWaitingCol;
+
+                //lineRenderer.material = dottedMat;
+                //lineRenderer.material.color = palette.dottedWaitingCol;
                 break;
             case LineState.Normal:
-                lineRenderer.material = normalMat;
-                lineRenderer.material.color = palette.defaultCol;
+                lineVisual.Material = normalMat;
+                lineVisual.Material.color = palette.defaultCol;
+
+                //lineRenderer.material = normalMat;
+                //lineRenderer.material.color = palette.defaultCol;
                 break;
         }
     }
@@ -174,12 +183,13 @@ public class Line : MonoBehaviour
     {
         if (!addWayPoint)
         {
-            if(lineRenderer == null)
+            /*if(lineRenderer == null)
             {
                 print("BUG");
                 return;
-            }
-            lineRenderer.SetPosition(length, mousePosition);
+            }*/
+            //lineRenderer.SetPosition(length, mousePosition);
+            lineVisual.UpdateMesh(mousePosition);
         }
 
         addWayPoint = false;
@@ -187,33 +197,35 @@ public class Line : MonoBehaviour
 
     void SetLinePosition(Vector3 position)
     {
-        lineRenderer.SetPosition(length, position);
+        //lineRenderer.SetPosition(length, position);
 
-        length++;
-        lineRenderer.positionCount++;
+        //length++;
+        //lineRenderer.positionCount++;
 
-        addWayPoint = true;
+        //addWayPoint = true;
     }
 
-    public void Highlight()
+    /*public void Highlight()
     {
         lineRenderer.material.color = palette.highlightCol;
-    }
+    }*/
 
     public void BeSelect()
     {
-        lineRenderer.material.color = palette.beSelectCol;
+        //lineRenderer.material.color = palette.beSelectCol;
+        lineVisual.Material.color = palette.beSelectCol;
     }
 
     public void CancelSelect()
     {
-        lineRenderer.material.color = lineState == LineState.Waiting ? palette.dottedWaitingCol : palette.defaultCol;
+        //lineRenderer.material.color = lineState == LineState.Waiting ? palette.dottedWaitingCol : palette.defaultCol;
+        lineVisual.Material.color = lineState == LineState.Waiting ? palette.dottedWaitingCol : palette.defaultCol;
     }
 
     public void FinishLine(Node endNode)
     {
-        lineRenderer.SetPosition(length, endNode.transform.position);
-
+        //lineRenderer.SetPosition(length, endNode.transform.position);
+        lineVisual.ConnectNode(endNode.transform.position);
         Vector2[] points = edgeColl.points;
         points[0] = Vector2.zero;
         points[1] = endNode.transform.position - transform.position;
@@ -240,12 +252,14 @@ public class Line : MonoBehaviour
         if(lineState == LineState.Using)
         {
             lineState = LineState.Waiting;
-            lineRenderer.material.color = palette.dottedWaitingCol;
+            //lineRenderer.material.color = palette.dottedWaitingCol;
+            lineVisual.Material.color = palette.dottedWaitingCol;
         }
         else if(lineState == LineState.Waiting)
         {
             lineState = LineState.Using;
-            lineRenderer.material.color = palette.dottedUsingCol;
+            //lineRenderer.material.color = palette.dottedUsingCol;
+            lineVisual.Material.color = palette.dottedUsingCol;
         }
         #region ChangeOneWayLineDirection
         /*        if(otherLineStartNode == null || otherLineEndNode == null)
@@ -294,8 +308,8 @@ public class Line : MonoBehaviour
 
     public void ConnectWayPoint(WayPoint wayPoint)
     {
-        wayPoints.Add(wayPoint);
-        SetLinePosition(wayPoint.transform.position);
+        //wayPoints.Add(wayPoint);
+        //SetLinePosition(wayPoint.transform.position);
 
     }
 

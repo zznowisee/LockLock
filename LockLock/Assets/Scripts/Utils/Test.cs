@@ -6,10 +6,6 @@ public class Test : MonoBehaviour
 {
     public Material material;
     Transform mesh;
-    private void Awake()
-    {
-        mesh = MeshGenerator.GenerateMesh(material, 6, "Bird", transform);
-    }
 
     private void Update()
     {
