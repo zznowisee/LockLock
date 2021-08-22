@@ -51,7 +51,7 @@ public class Train : MonoBehaviour
         meshRenderer = transform.Find("sprite").GetComponent<MeshRenderer>();
         trainTypeText = transform.Find("trainTypeText").GetComponent<TextMeshPro>();
         preNode = currentNode = startNode;
-        this.stationIndex = index;
+        stationIndex = index;
         switch (index)
         {
             case 0:
@@ -110,14 +110,8 @@ public class Train : MonoBehaviour
 
         Line passedLine = currentNode.GetLineFromConnectingNodesWithNode(nextNode);
 
-        if (passedLine.GetLineState() == LineState.Using)
-        {
-            Node targetNode = passedLine.switchStartNode;
-            targetNode.Switch();
-
-            CustomSystem customSystem = FindObjectOfType<CustomSystem>();
-            customSystem.AddSwitchInfo(targetNode);
-        }
+        Node targetNode = passedLine.switchStartNode;
+        targetNode.Switch();
 
         UpdateNodeInfo(nextNode);
 

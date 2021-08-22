@@ -15,9 +15,6 @@ public class Line : MonoBehaviour
     [Header("Mark Prefabs")]
     [SerializeField] Transform pfMarkLine;
 
-    //LineRenderer lineRenderer;
-    EdgeCollider2D edgeColl;
-
     public bool hasBeenSetup = false;
 
     bool isSwitchConnectingLine = false;
@@ -42,12 +39,12 @@ public class Line : MonoBehaviour
 
     Transform switchVisualMark;
 
-    List<WayPoint> wayPoints;
-
-    int length = 1;
+    List<WayPointNode> wayPoints;
 
     LineVisual lineVisual;
+
     [SerializeField] float lineWidth = 0.5f;
+    float cellSize = 6f;
 
     public Vector2 LineCenterPos
     {
@@ -62,6 +59,18 @@ public class Line : MonoBehaviour
         get
         {
             return switchVisualMark;
+        }
+    }
+
+    public List<WayPointNode> WayPoints
+    {
+        get
+        {
+            if(wayPoints == null)
+            {
+                wayPoints = new List<WayPointNode>();
+            }
+            return wayPoints;
         }
     }
 
@@ -88,20 +97,14 @@ public class Line : MonoBehaviour
         isSwitchConnectingLine = true;
     }
 
-    public void Setup(Vector3 position, Node startNode, LineState lineState)
+    public void Setup(Node startNode, LineState lineState)
     {
         hasBeenSetup = true;
         
-        //lineRenderer = GetComponent<LineRenderer>();
-        edgeColl = GetComponent<EdgeCollider2D>();
-        wayPoints = new List<WayPoint>();
+        wayPoints = new List<WayPointNode>();
 
-        lineVisual = transform.Find("lineVisual").GetComponent<LineVisual>();
-        lineVisual.Setup(position);
-
-        //lineRenderer.positionCount = 2;
-        //lineRenderer.SetPosition(0, position);
-        //lineRenderer.SetPosition(1, position);
+        lineVisual = GetComponent<LineVisual>();
+        lineVisual.Setup(Vector2.zero, lineWidth, cellSize);
 
         switchStartNode = startNode;
         this.lineState = lineState;
@@ -112,23 +115,14 @@ public class Line : MonoBehaviour
             case LineState.Using:
                 lineVisual.Material = dottedMat;
                 lineVisual.Material.color = palette.dottedUsingCol;
-
-                //lineRenderer.material = dottedMat;
-                //lineRenderer.material.color = palette.dottedUsingCol;
                 break;
             case LineState.Waiting:
                 lineVisual.Material = dottedMat;
                 lineVisual.Material.color = palette.dottedWaitingCol;
-
-                //lineRenderer.material = dottedMat;
-                //lineRenderer.material.color = palette.dottedWaitingCol;
                 break;
             case LineState.Normal:
                 lineVisual.Material = normalMat;
                 lineVisual.Material.color = palette.defaultCol;
-
-                //lineRenderer.material = normalMat;
-                //lineRenderer.material.color = palette.defaultCol;
                 break;
         }
     }
@@ -183,53 +177,34 @@ public class Line : MonoBehaviour
     {
         if (!addWayPoint)
         {
-            /*if(lineRenderer == null)
-            {
-                print("BUG");
-                return;
-            }*/
-            //lineRenderer.SetPosition(length, mousePosition);
-            lineVisual.UpdateMesh(mousePosition);
+            lineVisual.UpdateMesh(mousePosition - transform.position);
         }
 
         addWayPoint = false;
     }
 
-    void SetLinePosition(Vector3 position)
-    {
-        //lineRenderer.SetPosition(length, position);
-
-        //length++;
-        //lineRenderer.positionCount++;
-
-        //addWayPoint = true;
-    }
-
-    /*public void Highlight()
-    {
-        lineRenderer.material.color = palette.highlightCol;
-    }*/
-
     public void BeSelect()
     {
-        //lineRenderer.material.color = palette.beSelectCol;
         lineVisual.Material.color = palette.beSelectCol;
     }
 
     public void CancelSelect()
     {
-        //lineRenderer.material.color = lineState == LineState.Waiting ? palette.dottedWaitingCol : palette.defaultCol;
         lineVisual.Material.color = lineState == LineState.Waiting ? palette.dottedWaitingCol : palette.defaultCol;
     }
 
     public void FinishLine(Node endNode)
     {
+        #region LineRenderer
         //lineRenderer.SetPosition(length, endNode.transform.position);
-        lineVisual.ConnectNode(endNode.transform.position);
-        Vector2[] points = edgeColl.points;
-        points[0] = Vector2.zero;
-        points[1] = endNode.transform.position - transform.position;
-        edgeColl.points = points;
+        /*        Vector2[] points = edgeColl.points;
+                points[0] = Vector2.zero;
+                points[1] = endNode.transform.position - transform.position;
+                edgeColl.points = points;*/
+        #endregion
+
+        lineVisual.ConnectNode(endNode.transform.position - transform.position);
+
 
         switchEndNode = endNode;
 
@@ -252,13 +227,11 @@ public class Line : MonoBehaviour
         if(lineState == LineState.Using)
         {
             lineState = LineState.Waiting;
-            //lineRenderer.material.color = palette.dottedWaitingCol;
             lineVisual.Material.color = palette.dottedWaitingCol;
         }
         else if(lineState == LineState.Waiting)
         {
             lineState = LineState.Using;
-            //lineRenderer.material.color = palette.dottedUsingCol;
             lineVisual.Material.color = palette.dottedUsingCol;
         }
         #region ChangeOneWayLineDirection
@@ -306,17 +279,16 @@ public class Line : MonoBehaviour
         Destroy(gameObject);
     }
 
-    public void ConnectWayPoint(WayPoint wayPoint)
+    public void ConnectWayPoint(WayPointNode wayPoint)
     {
-        //wayPoints.Add(wayPoint);
-        //SetLinePosition(wayPoint.transform.position);
-
+        wayPoints.Add(wayPoint);
+        lineVisual.ConnectWayPoint(wayPoint.transform.position - transform.position);
     }
 
-    public void SeparateWayPoint(WayPoint wayPoint)
+    public void SeparateWayPoint(WayPointNode wayPoint)
     {
         wayPoints.Remove(wayPoint);
-
+        lineVisual.SeparateWayPoint();
 
     }
 }

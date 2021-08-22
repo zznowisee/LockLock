@@ -2,6 +2,7 @@
     Properties{
         _MaskTex("Mask Tex", 2D) = "white"{}
         _Color ("Color", Color) = (1,1,1,1)
+        _Length("Length",float) = 1
     }
     SubShader{
         Tags { "RenderType"="Transparent" "Queue"="Transparent" }
@@ -26,6 +27,7 @@
 
             sampler2D _MaskTex;
             float4 _Color;
+            float _Length;
             
             v2f vertex (a2v v){
                 v2f o;
@@ -34,11 +36,10 @@
                 return o;
             }
 
-            float4 fragment (v2f i) : SV_TARGET {
-                float3 color;
-                color = _Color.rgb;
-                float alpha = tex2D(_MaskTex, i.uv).rgb;
-                return float4(color, alpha);
+            float4 fragment(v2f i) : SV_TARGET{
+                float2 offset = i.uv * _Length * 2;
+                float alpha = tex2D(_MaskTex, offset);
+                return float4(_Color.rgb, alpha);
             }
             ENDCG
         }

@@ -7,13 +7,16 @@ public class Node : MonoBehaviour
 {
     public Action OnTrainArrived;
 
-    public enum NodeState { Node, Switch }
-    [SerializeField] NodeState nodeState = NodeState.Node;
+    public enum NodeState { Node, Switch, WayPoint }
+    [SerializeField] protected NodeState nodeState;
+
+    CustomSystem customSystem;
 
     Transform lineParent;
-    Transform beSelectGraphic;
     Transform switchGraphic;
     Transform switchWarning;
+
+    protected Transform beSelectGraphic;
 
     LineController lineController;
 
@@ -22,8 +25,8 @@ public class Node : MonoBehaviour
     [SerializeField] Line pfLine;
 
     [HideInInspector] public Line currentLine;
-    public Line waitingLine = null;
-    public Line usingLine = null;
+    Line waitingLine = null;
+    Line usingLine = null;
 
     [HideInInspector] public bool hasDrawSwitchLine = false;
 
@@ -52,6 +55,7 @@ public class Node : MonoBehaviour
 
     private void Awake()
     {
+        customSystem = FindObjectOfType<CustomSystem>();
         connectingNodes = new List<Line2Node>();
         combineNodes = new List<Node>();
         combineLines = new List<Line>();
@@ -67,8 +71,9 @@ public class Node : MonoBehaviour
         lineController.gameObject.SetActive(false);
 
         CheckSwitchWarning();
+        nodeState = NodeState.Node;
     }
-    
+
     public void SetAsLineController(Line target)
     {
         lineController.gameObject.SetActive(true);
@@ -170,7 +175,7 @@ public class Node : MonoBehaviour
             switch (nodeState)
             {
                 case NodeState.Node:
-                    currentLine.Setup(transform.position, this, LineState.Normal);
+                    currentLine.Setup(this, LineState.Normal);
                     break;
                 case NodeState.Switch:
                     //
@@ -178,16 +183,16 @@ public class Node : MonoBehaviour
                     {
                         if (waitingLine == null)
                         {
-                            currentLine.Setup(transform.position, this, LineState.Waiting);
+                            currentLine.Setup(this, LineState.Waiting);
                         }
                         if (usingLine == null)
                         {
-                            currentLine.Setup(transform.position, this, LineState.Using);
+                            currentLine.Setup(this, LineState.Using);
                         }
                     }
                     else
                     {
-                        currentLine.Setup(transform.position, this, LineState.Normal);
+                        currentLine.Setup(this, LineState.Normal);
                     }
                     //
                     break;
@@ -213,7 +218,7 @@ public class Node : MonoBehaviour
         CheckSwitchWarning();
     }
 
-    public void ResetLine()
+    public void DeleteLine()
     {
         Destroy(currentLine.gameObject);
         currentLine = null;
@@ -267,8 +272,10 @@ public class Node : MonoBehaviour
                 break;
         }
 
-        Line2Node startToEnd = new Line2Node(currentLine, connectNode, canPass);
-        Line2Node endToStart = new Line2Node(currentLine, this, canPass);
+        List<WayPointNode> wayPoints = currentLine.WayPoints;
+        Line2Node startToEnd = new Line2Node(currentLine, connectNode, canPass, wayPoints);
+        wayPoints.Reverse();
+        Line2Node endToStart = new Line2Node(currentLine, this, canPass, wayPoints);
 
         connectingNodes.Add(startToEnd);
         connectNode.connectingNodes.Add(endToStart);
@@ -357,17 +364,24 @@ public class Node : MonoBehaviour
 
     public void Switch()
     {
-        List<Line> changedLines = new List<Line>();
-        List<Node> changedNodes = new List<Node>();
-
-        SwitchLines();
-        changedLines.Add(usingLine);
-        changedLines.Add(waitingLine);
-        changedNodes.Add(this);
-
-        for (int i = 0; i < combineNodes.Count; i++)
+        if(nodeState == NodeState.Switch)
         {
-            combineNodes[i].SwitchByCombineNode(ref changedLines, ref changedNodes);
+            List<Line> changedLines = new List<Line>();
+            List<Node> changedNodes = new List<Node>();
+
+            SwitchLines();
+            changedLines.Add(usingLine);
+            changedLines.Add(waitingLine);
+            changedNodes.Add(this);
+
+            //change all combined node's line
+
+            for (int i = 0; i < combineNodes.Count; i++)
+            {
+                combineNodes[i].SwitchByCombineNode(ref changedLines, ref changedNodes);
+            }
+
+            customSystem.AddSwitchInfo(this);
         }
     }
 
@@ -526,17 +540,18 @@ public class Node : MonoBehaviour
         return null;
     }
 
-    [System.Serializable]
     public class Line2Node
     {
         public Line line;
         public Node node;
         public bool canPass;
-        public Line2Node(Line line_, Node node_, bool canPass_)
+        public List<WayPointNode> wayPoints;
+        public Line2Node(Line line_, Node node_, bool canPass_, List<WayPointNode> wayPoints_)
         {
             line = line_;
             node = node_;
             canPass = canPass_;
+            wayPoints = wayPoints_;
         }
     }
 }

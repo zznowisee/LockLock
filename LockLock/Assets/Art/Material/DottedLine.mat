@@ -79,6 +79,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _Length: 1
     - _LightingEnabled: 0
     - _Metallic: 0
     - _Mode: 0

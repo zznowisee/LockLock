@@ -48,8 +48,10 @@ public class CustomSystem : MonoBehaviour
     Line selectLine = null;
     Line currentControlLine = null;
     Line currentDrawingLine = null;
-    WayPoint currentWayPoint = null;
-    WayPoint preWayPoint = null;
+
+    WayPointNode currentWayPoint = null;
+    WayPointNode preWayPoint = null;
+
     private Transform nodeParent;
 
     Transform train;
@@ -141,11 +143,22 @@ public class CustomSystem : MonoBehaviour
         }
     }
 
+    void SwitchNodeState()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (currentNode)
+            {
+                currentNode.SwitchState();
+            }
+        }
+    }
+
     void Update()
     {
         if(gameState == GameState.Edit)
         {
-            if (Input.GetKeyDown(KeyCode.Space))
+            /*if (Input.GetKeyDown(KeyCode.Space))
             {
                 GameObject obj = InputHelper.GetObjectUnderMousePosition(nodeLayer);
                 if (obj)
@@ -153,7 +166,7 @@ public class CustomSystem : MonoBehaviour
                     Node node = obj.GetComponent<Node>();
                     node.SwitchState();
                 }
-            }
+            }*/
 
             switch (inputState)
             {
@@ -167,6 +180,7 @@ public class CustomSystem : MonoBehaviour
                     SetNodeAsLineController();
                     DeleteTrain();
                     DeleteStation();
+                    SwitchNodeState();
                     break;
                 case InputState.LineSelect:
                     SelectNode();
@@ -389,7 +403,7 @@ public class CustomSystem : MonoBehaviour
             GameObject wayPointObj = InputHelper.GetObjectUnderMousePosition(wayPointLayer);
             if(wayPointObj != null)
             {
-                WayPoint wayPoint = wayPointObj.GetComponent<WayPoint>();
+                WayPointNode wayPoint = wayPointObj.GetComponent<WayPointNode>();
                 currentWayPoint = wayPoint;
                 // if current way point is not last frame stored way point
                 if (currentWayPoint != preWayPoint)
@@ -436,14 +450,14 @@ public class CustomSystem : MonoBehaviour
                 }
                 else
                 {
-                    currentNode.ResetLine();
+                    currentNode.DeleteLine();
                     inputState = InputState.NodeSelect;
                     return;
                 }
             }
             else
             {
-                currentNode.ResetLine();
+                currentNode.DeleteLine();
                 inputState = InputState.NodeSelect;
             }
         }
