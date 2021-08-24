@@ -5,8 +5,8 @@ using System;
 
 public class CustomSystem : MonoBehaviour
 {
-    public static Action OnStartPlay;
 
+    public static Action OnStartPlay;
     [Header("Layer")]
     [SerializeField] LayerMask nodeLayer;
     [SerializeField] LayerMask lineLayer;
@@ -16,11 +16,15 @@ public class CustomSystem : MonoBehaviour
     [SerializeField] Transform pfTrain;
     [SerializeField] Transform pfStation;
     [SerializeField] Transform pfNode;
+    [SerializeField] Transform pfSwitchNode;
+    [SerializeField] Transform pfWayPointNode;
 
     List<Station> stations = new List<Station>();
 
     public List<SwitchInfo> switchInfos;
-    public List<TrainInfo> activeTrains;
+    public List<Train> activeTrains;
+    public List<TrainInfo> activeTrainInfos;
+    public List<NodeSlot> disableNodeSlots;
 
     public enum InputState
     {
@@ -53,14 +57,24 @@ public class CustomSystem : MonoBehaviour
     WayPointNode preWayPoint = null;
 
     private Transform nodeParent;
+    private Transform trainParent;
+    private Transform stationParent;
+    [HideInInspector] public Transform lineParent;
 
     Transform train;
-
+    
     private void Awake()
     {
         nodeParent = transform.Find("nodeParent");
+        trainParent = transform.Find("trainParent");
+        stationParent = transform.Find("stationParent");
+        lineParent = transform.Find("lineParent");
 
-        trainIndices = stationIndices = new int[]
+        trainIndices = new int[]
+        {
+            -1,-1,-1,-1
+        };
+        stationIndices = new int[]
         {
             -1,-1,-1,-1
         };
@@ -68,28 +82,31 @@ public class CustomSystem : MonoBehaviour
 
     void Start()
     {
-        activeTrains = new List<TrainInfo>();
+        activeTrainInfos = new List<TrainInfo>();
         switchInfos = new List<SwitchInfo>();
+        disableNodeSlots = new List<NodeSlot>();
     }
 
-    public void AddSwitchInfo(Node targetNode)
+    public void AddSwitchInfo(SwitchNode targetNode)
     {
         bool hasNode = false;
         for (int i = 0; i < switchInfos.Count; i++)
         {
-            if (switchInfos[i].switchNode == targetNode)
+            if (switchInfos[i].switchNode == targetNode || switchInfos[i].switchNode.CombineNodesContain(targetNode))
             {
-                SwitchInfo si = new SwitchInfo() { passTimes = switchInfos[i].passTimes + 1, switchNode = switchInfos[i].switchNode };
+                switchInfos[i].passTimes++;
                 hasNode = true;
-                switchInfos[i] = si;
+                break;
             }
         }
+
         if (!hasNode)
         {
             switchInfos.Add(new SwitchInfo() { passTimes = 1, switchNode = targetNode });
         }
     }
 
+    #region Buttons
     public void Run()
     {
         if(gameState == GameState.Play)
@@ -98,7 +115,7 @@ public class CustomSystem : MonoBehaviour
         }
 
         gameState = GameState.Play;
-        foreach (Train train in GridSystem.Instance.activeTrains)
+        foreach (Train train in activeTrains)
         {
             train.MoveToNextNode();
         }
@@ -125,31 +142,74 @@ public class CustomSystem : MonoBehaviour
             switchInfos[i] = temp;
         }
 
-        for (int i = 0; i < activeTrains.Count; i++)
+        for (int i = 0; i < activeTrainInfos.Count; i++)
         {
-            Node currentNode = activeTrains[i].movedTrain.CurrentNode;
+            Node currentNode = activeTrainInfos[i].movedTrain.CurrentNode;
             currentNode.ClearTrain();
         }
 
-        for (int i = 0; i < activeTrains.Count; i++)
+        for (int i = 0; i < activeTrainInfos.Count; i++)
         {
-            Node startNode = activeTrains[i].startNode;
-            Train train = activeTrains[i].movedTrain;
+            Node startNode = activeTrainInfos[i].startNode;
+            Train train = activeTrainInfos[i].movedTrain;
+
             train.StopAllCoroutines();
             startNode.SetTrain(train);
             train.transform.position = startNode.transform.position;
-            train.transform.rotation = activeTrains[i].rotation;
+            train.transform.rotation = activeTrainInfos[i].rotation;
             train.Setup(startNode, train.StationIndex);
         }
     }
 
+    public void Restart()
+    {
+        for (int i = 0; i < trainParent.childCount; i++)
+        {
+            Destroy(trainParent.GetChild(i).gameObject);
+        }
+
+        for (int i = 0; i < stationParent.childCount; i++)
+        {
+            Destroy(stationParent.GetChild(i).gameObject);
+        }
+
+        for (int i = 0; i < nodeParent.childCount; i++)
+        {
+            Destroy(nodeParent.GetChild(i).gameObject);
+        }
+
+        for (int i = 0; i < disableNodeSlots.Count; i++)
+        {
+            disableNodeSlots[i].gameObject.SetActive(true);
+            disableNodeSlots[i].ClearNode();
+        }
+
+        disableNodeSlots.Clear();
+
+        for (int i = 0; i < lineParent.childCount; i++)
+        {
+            Destroy(lineParent.GetChild(i).gameObject);
+        }
+
+        trainIndices = new int[]
+        {
+            -1,-1,-1,-1
+        };
+        stationIndices = new int[]
+        {
+            -1,-1,-1,-1
+        };
+
+        activeTrains.Clear();
+    }
+    #endregion
     void SwitchNodeState()
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
             if (currentNode)
             {
-                currentNode.SwitchState();
+                //currentNode.SwitchState();
             }
         }
     }
@@ -158,16 +218,6 @@ public class CustomSystem : MonoBehaviour
     {
         if(gameState == GameState.Edit)
         {
-            /*if (Input.GetKeyDown(KeyCode.Space))
-            {
-                GameObject obj = InputHelper.GetObjectUnderMousePosition(nodeLayer);
-                if (obj)
-                {
-                    Node node = obj.GetComponent<Node>();
-                    node.SwitchState();
-                }
-            }*/
-
             switch (inputState)
             {
                 case InputState.NullSelect:
@@ -231,15 +281,15 @@ public class CustomSystem : MonoBehaviour
                     }
                 }
 
-                for (int i = 0; i < activeTrains.Count; i++)
+                for (int i = 0; i < activeTrainInfos.Count; i++)
                 {
-                    if(activeTrains[i].movedTrain == currentNode.Train)
+                    if(activeTrainInfos[i].movedTrain == currentNode.Train)
                     {
-                        activeTrains.RemoveAt(i);
+                        activeTrainInfos.RemoveAt(i);
                         break;
                     }
                 }
-
+                activeTrains.Remove(currentNode.Train);
                 Destroy(currentNode.Train.gameObject);
                 currentNode.ClearTrain();
             }
@@ -305,11 +355,12 @@ public class CustomSystem : MonoBehaviour
             }
 
             if (index == -1) return;
-            Train train = Instantiate(pfTrain, currentNode.transform.position, Quaternion.identity).GetComponent<Train>();
+            Train train = Instantiate(pfTrain, currentNode.transform.position, Quaternion.identity,trainParent).GetComponent<Train>();
             currentNode.SetTrain(train);
             train.Setup(currentNode, index);
 
-            activeTrains.Add(new TrainInfo() { movedTrain = train, startNode = currentNode, rotation = train.transform.rotation });
+            activeTrainInfos.Add(new TrainInfo() { movedTrain = train, startNode = currentNode, rotation = train.transform.rotation });
+            activeTrains.Add(train);
         }
     }
 
@@ -334,7 +385,7 @@ public class CustomSystem : MonoBehaviour
             }
 
             if (index == -1) return;
-            Station station = Instantiate(pfStation, currentNode.transform.position, Quaternion.identity).GetComponent<Station>();
+            Station station = Instantiate(pfStation, currentNode.transform.position, Quaternion.identity, stationParent).GetComponent<Station>();
             currentNode.SetStation(station);
             station.Setup(currentNode, index);
             stations.Add(station);
@@ -366,12 +417,39 @@ public class CustomSystem : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.N))
         {
-            Node node = Instantiate(pfNode, currentNodeSlot.transform.position, Quaternion.identity, nodeParent).GetComponent<Node>();
-            node.Setup(currentNodeSlot.GlobalIndex, currentNodeSlot);
-            currentNodeSlot.SetNode(node);
-            currentNodeSlot.gameObject.SetActive(false);
+            if (currentNodeSlot.IsEmpty)
+            {
+                Node node = Instantiate(pfNode, currentNodeSlot.transform.position, Quaternion.identity, nodeParent).GetComponent<Node>();
+                node.Setup(currentNodeSlot.GlobalIndex, currentNodeSlot);
+                currentNodeSlot.SetNode(node);
+                currentNodeSlot.gameObject.SetActive(false);
+                disableNodeSlots.Add(currentNodeSlot);
+                return;
+            }
+        }
 
-            node.gameObject.name = "Node_" + currentNodeSlot.GlobalIndex.x + "_" + currentNodeSlot.GlobalIndex.y;
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            if (currentNodeSlot.IsEmpty)
+            {
+                SwitchNode switchNode = Instantiate(pfSwitchNode, currentNodeSlot.transform.position, Quaternion.identity, nodeParent).GetComponent<SwitchNode>();
+                switchNode.Setup(currentNodeSlot.GlobalIndex, currentNodeSlot);
+                currentNodeSlot.SetNode(switchNode);
+                currentNodeSlot.gameObject.SetActive(false);
+                disableNodeSlots.Add(currentNodeSlot);
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            if (currentNodeSlot.IsEmpty)
+            {
+                WayPointNode wayPointNode = Instantiate(pfWayPointNode, currentNodeSlot.transform.position, Quaternion.identity, nodeParent).GetComponent<WayPointNode>();
+                wayPointNode.Setup(currentNodeSlot.GlobalIndex, currentNodeSlot);
+                currentNodeSlot.SetNode(wayPointNode);
+                currentNodeSlot.gameObject.SetActive(false);
+                disableNodeSlots.Add(currentNodeSlot);
+            }
         }
     }
 
@@ -399,7 +477,7 @@ public class CustomSystem : MonoBehaviour
     {
         if (Input.GetMouseButton(0))
         {
-            currentDrawingLine = currentNode.currentLine;
+            //currentDrawingLine = currentNode.currentLine;
             GameObject wayPointObj = InputHelper.GetObjectUnderMousePosition(wayPointLayer);
             if(wayPointObj != null)
             {
@@ -431,7 +509,7 @@ public class CustomSystem : MonoBehaviour
                 currentWayPoint = null;
             }
 
-            Vector2 endPosition = GetLineEndPosition(InputHelper.MouseWorldPositionIn2D);
+            Vector2 endPosition = InputHelper.MouseWorldPositionIn2D;
             currentNode.DrawLine(endPosition);
         }
 
@@ -463,7 +541,7 @@ public class CustomSystem : MonoBehaviour
         }
     }
 
-    Vector2 GetLineEndPosition(Vector2 mousePos)
+/*    Vector2 GetLineEndPosition(Vector2 mousePos)
     {
         Node closestNode = null;
         Collider2D[] aroundNodes = Physics2D.OverlapCircleAll(mousePos, 6f, nodeLayer);
@@ -475,7 +553,7 @@ public class CustomSystem : MonoBehaviour
         }
 
         return mousePos;
-    }
+    }*/
 
     void SelectNode()
     {
@@ -522,7 +600,7 @@ public class CustomSystem : MonoBehaviour
                 {
                     selectLine.CancelSelect();
                 }
-
+                
                 return;
             }
             else
@@ -566,10 +644,10 @@ public class CustomSystem : MonoBehaviour
         }
     }
 
-    public struct SwitchInfo
+    public class SwitchInfo
     {
         public int passTimes;
-        public Node switchNode;
+        public SwitchNode switchNode;
     }
 
     public struct TrainInfo
@@ -577,5 +655,5 @@ public class CustomSystem : MonoBehaviour
         public Train movedTrain;
         public Node startNode;
         public Quaternion rotation;
-    }
+    } 
 }

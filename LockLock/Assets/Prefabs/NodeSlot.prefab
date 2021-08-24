@@ -70,7 +70,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 9770954801da77148ab365a9fc4a42ec, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 7baee6b2f670cdf49bb629ef1de8761d, type: 3}
   m_Color: {r: 0.514151, g: 1, b: 0.87362564, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -91,7 +91,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6521494478320808936}
   - component: {fileID: 6521494478320808938}
-  - component: {fileID: 6521494478320808939}
+  - component: {fileID: 5117317670168444282}
   m_Layer: 10
   m_Name: NodeSlot
   m_TagString: Untagged
@@ -129,8 +129,8 @@ MonoBehaviour:
   globalIndex: {x: 0, y: 0}
   beSelectColor: {r: 0, g: 0, b: 0, a: 0}
   defaultColor: {r: 0, g: 0, b: 0, a: 0}
---- !u!58 &6521494478320808939
-CircleCollider2D:
+--- !u!60 &5117317670168444282
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -143,5 +143,20 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
-  serializedVersion: 2
-  m_Radius: 1.3381865
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths:
+    - - {x: -0.015247822, y: 3.1041176}
+      - {x: -2.689241, y: 1.5592899}
+      - {x: -2.7071502, y: -1.5408843}
+      - {x: 0.008390546, y: -3.0961015}
+      - {x: 2.672601, y: -1.5199288}
+      - {x: 2.7044883, y: 1.5440428}

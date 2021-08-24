@@ -4,16 +4,39 @@ using UnityEngine;
 
 public class Test : MonoBehaviour
 {
-    public Material material;
-    Transform mesh;
+    List<Vector2Int> tests;
+
+    private void Awake()
+    {
+        tests = new List<Vector2Int>();
+
+        tests.Add(Vector2Int.down);
+        tests.Add(Vector2Int.one);
+        tests.Add(Vector2Int.up);
+        tests.Add(Vector2Int.left);
+
+        for (int i = 0; i < tests.Count; i++)
+        {
+            Vector2Int index = tests[i];
+            if(index.x == 1)
+            {
+                tests.Remove(index);
+            }
+        }
+
+        for (int i = 0; i < tests.Count; i++)
+        {
+            print(tests[i]);
+        }
+    }
 
     private void Update()
     {
-        //mesh.GetComponent<MeshFilter>().mesh.vertices[1] = 
+        
     }
 
     public void GenerateMesh()
     {
-        Transform mesh = MeshGenerator.GenerateMesh(material, 0.5f, "Bird", transform);
+        
     }
 }

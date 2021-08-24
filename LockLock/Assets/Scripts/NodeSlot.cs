@@ -17,7 +17,7 @@ public class NodeSlot : MonoBehaviour
             return globalIndex;
         }
     }
-
+    public bool IsEmpty { get { return node == null; } }
     public void Setup(Vector2Int globalIndex_)
     {
         spriteRenderer = transform.Find("sprite").GetComponent<SpriteRenderer>();
@@ -27,7 +27,7 @@ public class NodeSlot : MonoBehaviour
     }
 
     public void SetNode(Node node_) => node = node_;
-
+    public void ClearNode() => node = null;
     public void BeSelect() => spriteRenderer.color = beSelectColor;
     public void CancelSelect() => spriteRenderer.color = defaultColor;
 }

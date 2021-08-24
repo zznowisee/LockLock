@@ -74,9 +74,6 @@ public class Train : MonoBehaviour
         trainTypeText.text = trainNumber.ToString();
     }
 
-    private void OnEnable() => GridSystem.Instance.activeTrains.Add(this);
-    private void OnDisable() => GridSystem.Instance.activeTrains.Remove(this);
-
     public void MoveToNextNode()
     {
         var nextNode = currentNode.GetNextNode(preNode);
@@ -84,6 +81,10 @@ public class Train : MonoBehaviour
         if (nextNode != null)
         {
             currentPassing = StartCoroutine(MoveToTarget(nextNode));
+        }
+        else
+        {
+            print($"{trainNumber} train : Stop!");
         }
     }
 
@@ -110,8 +111,13 @@ public class Train : MonoBehaviour
 
         Line passedLine = currentNode.GetLineFromConnectingNodesWithNode(nextNode);
 
-        Node targetNode = passedLine.switchStartNode;
-        targetNode.Switch();
+        Node targetNode = passedLine.StartNode;
+        print($"Passed Line Start Node : {targetNode.gameObject.name}");
+        if(targetNode.NodeState == NodeState.Switch)
+        {
+            SwitchNode sw = targetNode.GetComponent<SwitchNode>();
+            sw.Switch();
+        }
 
         UpdateNodeInfo(nextNode);
 

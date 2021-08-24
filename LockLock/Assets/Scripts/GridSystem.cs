@@ -4,10 +4,6 @@ using UnityEngine;
 
 public class GridSystem : MonoBehaviour
 {
-    public static GridSystem Instance { get; private set; }
-
-    CustomSystem inputSystem;
-
     [SerializeField] float cameraAreaKeep;
     [SerializeField] float cellSize;
     [SerializeField] int width;
@@ -17,8 +13,6 @@ public class GridSystem : MonoBehaviour
 
     [SerializeField] Node pfNode;
     [SerializeField] NodeSlot pfNodeSlot;
-
-    [HideInInspector] public List<Train> activeTrains = new List<Train>();
 
     public TrainSetup trainSetup;
 
@@ -37,12 +31,6 @@ public class GridSystem : MonoBehaviour
         {
             cellSize = 0.01f;
         }
-    }
-
-    void Awake()
-    {
-        Instance = this;
-        inputSystem = FindObjectOfType<CustomSystem>();
     }
 
     void Start()
@@ -82,15 +70,6 @@ public class GridSystem : MonoBehaviour
 
                 nodeSlot.Setup(globalIndex);
                 nodeSlot.gameObject.name = "NodeSlot_" + x + "_" + y;
-                // setup node
-                //Node node = Instantiate(pfNode, position, Quaternion.identity, nodeParent);
-                //node.gameObject.name = "Node_" + x + "_" + y;
-                //gridSlot.SetNode(node);
-
-                if(x == 1 && y == 0)
-                {
-                    nodeSlot.gameObject.SetActive(false);
-                }
             }
         }
     }
