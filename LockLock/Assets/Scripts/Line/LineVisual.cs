@@ -7,22 +7,22 @@ using UnityEngine;
 [RequireComponent(typeof(EdgeCollider2D))]
 public class LineVisual : MonoBehaviour
 {
-    List<Vector2> points;
+    public List<Vector2> points;
     MeshFilter meshFilter;
     MeshRenderer meshRenderer;
     EdgeCollider2D edgeCollider;
+
     float width = 0.5f;
     float cellSize = 6f;
 
     public Material material;
 
-    float totalLength;
-    float currentLength;
+    float finishLineLength;
+    float totalLineLength;
 
     List<int> wayPointsIndex;
     List<IndexLength> indexLengths;
 
-    public int VertexCount { get { return meshFilter.mesh.vertexCount; } }
     public Mesh LineMesh { get { return meshFilter.mesh; } set { meshFilter.mesh = value; } }
     public Material Material { get { return meshRenderer.material; } set { meshRenderer.material = value; } }
     public int LastIndex { get { return points.Count - 1; } }
@@ -52,90 +52,67 @@ public class LineVisual : MonoBehaviour
         LineMesh = GenerateMesh();
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            points.Add(Vector2.one);
+        }
+    }
+
     public void ConnectWayPoint(Vector2 position)
     {
-        totalLength += cellSize;
-        currentLength = totalLength;
+        finishLineLength += cellSize;
+        totalLineLength = finishLineLength;
 
         points[LastIndex] = position;
-        indexLengths[LastIndex].length = currentLength;
-
+        indexLengths[LastIndex].length = totalLineLength;
+        //anocher point
         points.Add(position);
-        indexLengths.Add(new IndexLength(LastIndex, currentLength));
+        indexLengths.Add(new IndexLength(LastIndex, finishLineLength));
         wayPointsIndex.Add(points.Count - 2);
-
+        //move point
         points.Add(position);
-        indexLengths.Add(new IndexLength(LastIndex, currentLength));
+        indexLengths.Add(new IndexLength(LastIndex, finishLineLength));
+
         LineMesh = GenerateMesh();
     }
 
     public void SeparateWayPoint()
     {
-        totalLength -= cellSize;
+        finishLineLength -= cellSize;
+        points.RemoveRange(LastIndex - 1, 2);
+        indexLengths.RemoveRange(LastIndex - 1, 2);
 
-        points.RemoveAt(LastIndex);
-        points.RemoveAt(LastIndex);
-        print(points.Count);
-        indexLengths.RemoveAt(indexLengths.Count - 1);
-        indexLengths.RemoveAt(indexLengths.Count - 1);
         wayPointsIndex.RemoveAt(wayPointsIndex.Count - 1);
         LineMesh = GenerateMesh();
     }
 
     public void ConnectNode(Vector2 position)
     {
-        totalLength += cellSize;
-        currentLength = totalLength;
+        finishLineLength += cellSize;
+        totalLineLength = finishLineLength;
 
         points[LastIndex] = position;
-        indexLengths[LastIndex].length = currentLength;
+        indexLengths[LastIndex].length = finishLineLength;
 
-        //ChangeLastTwoVertPos();
         edgeCollider.points = points.ToArray();
-        Material.SetFloat("_Length", totalLength);
+        Material.SetFloat("_Length", finishLineLength);
         LineMesh = GenerateMesh();
     }
 
     public void UpdateMesh(Vector2 position)
     {
-        float length = (points[points.Count - 1] - points[points.Count - 2]).magnitude;
-        currentLength = totalLength + length;
-
         points[LastIndex] = position;
-        indexLengths[LastIndex].length = currentLength;
 
-        //ChangeLastTwoVertPos();
+        float length = (points[points.Count - 1] - points[points.Count - 2]).magnitude;
+        totalLineLength = finishLineLength + length;
+
+        indexLengths[LastIndex].length = totalLineLength;
+
         LineMesh = GenerateMesh();
-        Material.SetFloat("_Length", currentLength);
+        Material.SetFloat("_Length", totalLineLength);
     }
-
-    #region Refac
-    /*void ChangeLastTwoVertPos()
-    {
-        Vector3[] verts = LineMesh.vertices;
-        Vector3 p0;
-        Vector3 p1;
-        Vector3 p2;
-        Vector3 p3;
-        GetVertexFromLastTwoPoints(out p0, out p1, out p2, out p3);
-        verts[verts.Length - 1] = p3;
-        verts[verts.Length - 2] = p2;
-        verts[verts.Length - 3] = p1;
-        verts[verts.Length - 4] = p0;
-
-        LineMesh.vertices = verts;
-    }
-
-    void GetVertexFromLastTwoPoints(out Vector3 p0, out Vector3 p1, out Vector3 p2, out Vector3 p3)
-    {
-        Vector2 dir = (points[points.Count - 1] - points[points.Count - 2]).normalized;
-        Vector2 left = new Vector2(-dir.y, dir.x);
-        p0 = points[points.Count - 2] + left * width * 0.5f;
-        p1 = points[points.Count - 2] - left * width * 0.5f;
-        p2 = points[points.Count - 1] + left * width * 0.5f;
-        p3 = points[points.Count - 1] - left * width * 0.5f;
-    }*/
-    #endregion
 
     Mesh GenerateMesh()
     {
@@ -167,7 +144,7 @@ public class LineVisual : MonoBehaviour
 
             //float uvValue = i / ((float)points.Count - 1 - pointInWayPoint);
             //float uvValue = uvIndex / ((float)points.Count - 1 - wayPointsIndex.Count);
-            float uvValue = indexLengths[i].length / currentLength;
+            float uvValue = indexLengths[i].length / totalLineLength;
             uvs[vertIndex] = new Vector2(uvValue, 0);
             uvs[vertIndex + 1] = new Vector2(uvValue, 1);
             if (!wayPointsIndex.Contains(i))

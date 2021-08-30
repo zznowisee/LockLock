@@ -10,7 +10,6 @@ public class Line : MonoBehaviour
     public LineInfo lineInfo;
     
     public LinePalette palette;
-    [SerializeField] protected Transform pfMarkLine;
 
     public bool hasBeenSetup = false;
 
@@ -28,42 +27,30 @@ public class Line : MonoBehaviour
 
     protected Transform oneWayMark;
 
-    protected Transform switchVisualMark;
-
-    List<WayPointNode> wayPoints;
-
     protected LineVisual lineVisual;
 
     protected float lineWidth = 0.5f;
     protected float cellSize = 6f;
 
+    protected string Name
+    {
+        get
+        {
+            if(lineInfo.startNode != null && lineInfo.endNode != null)
+            {
+                return $"{lineInfo.startNode.GlobalIndex}--{lineInfo.endNode.GlobalIndex}_{lineState}";
+            }
+
+            return "Line_" + lineState;
+        }
+    }
 
     private void Awake()
     {
         lineVisual = GetComponent<LineVisual>();
     }
 
-    public Transform SwitchVisualMark
-    {
-        get
-        {
-            return switchVisualMark;
-        }
-    }
-
     public Node StartNode { get { return lineInfo.startNode; } }
-
-    public List<WayPointNode> WayPoints
-    {
-        get
-        {
-            if(wayPoints == null)
-            {
-                wayPoints = new List<WayPointNode>();
-            }
-            return wayPoints;
-        }
-    }
 
     public bool IsOneWayLine() => isOnewayLine;
 
@@ -88,8 +75,6 @@ public class Line : MonoBehaviour
     public void Setup(Node startNode, LineState lineState)
     {
         hasBeenSetup = true;
-        
-        wayPoints = new List<WayPointNode>();
 
         lineVisual = GetComponent<LineVisual>();
         lineVisual.Setup(Vector2.zero, lineWidth, cellSize);
@@ -136,9 +121,6 @@ public class Line : MonoBehaviour
                 hasChangeDirection = false;
                 isOnewayLine = false;
 
-                dirStartNode = null;
-                dirEndNode = null;
-
                 oneWayMark.gameObject.SetActive(false);
             }
         }
@@ -161,7 +143,7 @@ public class Line : MonoBehaviour
         lineVisual.Material.color = palette.beSelectCol;
     }
 
-    public void CancelSelect()
+    public virtual void CancelSelect()
     {
         lineVisual.Material.color = palette.defaultCol;
     }
@@ -174,25 +156,27 @@ public class Line : MonoBehaviour
 
         lineInfo.endNode = endNode;
 
+        gameObject.name = Name;
         print($"Setup New NormalLine StartNode : '{ lineInfo.startNode.gameObject.name }' " +
               $"EndNode : '{ lineInfo.endNode.gameObject.name }'");
     }
 
     public void DeleteLine()
     {
-        lineInfo.startNode.Disconnect(ref dirEndNode, this);
+        lineInfo.startNode.Disconnect(ref lineInfo.endNode, this);
         Destroy(gameObject);
     }
 
     public void ConnectWayPoint(WayPointNode wayPoint)
     {
-        wayPoints.Add(wayPoint);
+        lineInfo.wayPointNodes.Add(wayPoint);
         lineVisual.ConnectWayPoint(wayPoint.transform.position - transform.position);
+        addWayPoint = true;
     }
 
     public void SeparateWayPoint(WayPointNode wayPoint)
     {
-        wayPoints.Remove(wayPoint);
+        lineInfo.wayPointNodes.Remove(wayPoint);
         lineVisual.SeparateWayPoint();
 
     }
@@ -202,6 +186,7 @@ public class Line : MonoBehaviour
 public class LineInfo
 {
     public LineState lineState;
+    public List<WayPointNode> wayPointNodes;
     public Line line;
     public Node startNode;
     public Node endNode;
@@ -210,7 +195,7 @@ public class LineInfo
     public LineInfo(Line line_, Node startNode_, bool canPass_, LineState lineState_)
     {
         line = line_;
-
+        wayPointNodes = new List<WayPointNode>();
         startNode = startNode_;
         endNode = null;
 
@@ -231,5 +216,93 @@ public class LineInfo
     public bool IsTwoNodeMatch(Node n1, Node n2)
     {
         return (n1 == startNode && n2 == endNode) || (n1 == endNode && n2 == startNode);
+    }
+
+    public bool IsTwoNodeInSameLine(WayPointNode wayPointNode, Node other)
+    {
+        if (wayPointNodes.Contains(wayPointNode))
+        {
+            if(other.NodeState == NodeState.WayPoint)
+            {
+                WayPointNode wpn = other.GetComponent<WayPointNode>();
+                if (wayPointNodes.Contains(wpn))
+                {
+                    if(Mathf.Abs(wayPointNodes.IndexOf(wpn) - wayPointNodes.IndexOf(wayPointNode)) == 1)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+                return false;
+            }
+            else
+            {
+                if(startNode == other || endNode == other)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    public Node GetNextNodeFromWayPoint(WayPointNode wayPointNode, Node preNode)
+    {
+        bool forwardOrder = true;
+        int wayPointIndex = wayPointNodes.IndexOf(wayPointNode);
+        if (preNode.NodeState == NodeState.WayPoint)
+        {
+            WayPointNode wpn = preNode.GetComponent<WayPointNode>();
+            if(wayPointNodes.IndexOf(wpn) > wayPointIndex)
+            {
+                forwardOrder = false;
+            }
+        }
+        else
+        {
+            if(endNode == preNode)
+            {
+                forwardOrder = false;
+            }
+        }
+
+        if (forwardOrder)
+        {
+            if(wayPointNodes.Count > 1)
+            {
+                if(wayPointIndex + 1 == wayPointNodes.Count)
+                {
+                    return endNode;
+                }
+                else
+                {
+                    return wayPointNodes[wayPointIndex + 1];
+                }
+            }
+            else
+            {
+                return endNode;
+            }
+        }
+        else
+        {
+            if (wayPointNodes.Count > 1)
+            {
+                if (wayPointIndex == 0)
+                {
+                    return startNode;
+                }
+                else
+                {
+                    return wayPointNodes[wayPointIndex - 1];
+                }
+            }
+            else
+            {
+                return startNode;
+            }
+        }
     }
 }

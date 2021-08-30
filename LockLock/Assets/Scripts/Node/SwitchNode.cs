@@ -10,11 +10,11 @@ public class SwitchNode : Node
 
     SwitchLine redLine;
     SwitchLine blueLine;
-
+    [SerializeField] SwitchLine pfSwitchLine;
     public SwitchLine BlueLine { get { return blueLine; } }
     public SwitchLine RedLine { get { return redLine; } }
 
-    bool hasDrawSwitchLine = false;
+    bool hasDrawRedBlue = false;
 
     private void Awake()
     {
@@ -44,13 +44,13 @@ public class SwitchNode : Node
 
     public void CombineWith(ref SwitchNode target)
     {
-        SwitchLine switchLine = nodeInfo.currentLine.GetComponent<SwitchLine>();
+        SwitchLine switchLine = nodeInfo.drawingLine.GetComponent<SwitchLine>();
 
         combineNodes.Add(target);
         target.combineNodes.Add(this);
 
-        combineLines.Add(nodeInfo.currentLine);
-        target.combineLines.Add(nodeInfo.currentLine);
+        combineLines.Add(nodeInfo.drawingLine);
+        target.combineLines.Add(nodeInfo.drawingLine);
 
         switch (switchLine.SwitchLineState)
         {
@@ -64,21 +64,25 @@ public class SwitchNode : Node
                 break;
         }
 
-        LineRenderer markLineRenderer = nodeInfo.currentLine.SwitchVisualMark.GetComponent<LineRenderer>();
+        LineRenderer markLineRenderer = switchLine.SwitchVisualMark.GetComponent<LineRenderer>();
         markLineRenderer.SetPosition(1, target.transform.position);
+
+        hasDrawRedBlue = redLine != null && blueLine != null;
+        target.hasDrawRedBlue = target.redLine != null && target.blueLine != null;
     }
 
     public override void DrawLine(Vector3 endPosition)
     {
-        if (nodeInfo.currentLine == null)
+        if (nodeInfo.drawingLine == null)
         {
-            nodeInfo.currentLine = Instantiate(pfLine, transform.position, Quaternion.identity, customSystem.lineParent);
+            nodeInfo.drawingLine = Instantiate(hasDrawRedBlue ? pfLine : pfSwitchLine, transform.position, Quaternion.identity, customSystem.lineParent);
         }
-        if (!nodeInfo.currentLine.hasBeenSetup)
+
+        if (!nodeInfo.drawingLine.hasBeenSetup)
         {
-            if (!hasDrawSwitchLine)
+            if (!hasDrawRedBlue)
             {
-                SwitchLine switchLine = nodeInfo.currentLine.GetComponent<SwitchLine>();
+                SwitchLine switchLine = nodeInfo.drawingLine.GetComponent<SwitchLine>();
                 if(redLine == null)
                 {
                     switchLine.Setup(this, LineState.SwitchLine, SwitchLineState.RedLine);
@@ -90,29 +94,29 @@ public class SwitchNode : Node
             }
             else
             {
-                nodeInfo.currentLine.Setup(this, LineState.NormalLine);
+                nodeInfo.drawingLine.Setup(this, LineState.NormalLine);
             }
         }
 
-        nodeInfo.currentLine.Draw(endPosition);
+        nodeInfo.drawingLine.Draw(endPosition);
     }
 
     public override void FinishDraw(ref Node nextNode)
     {
-        nodeInfo.currentLine.FinishLine(nextNode);
+        nodeInfo.drawingLine.FinishLine(nextNode);
         Connect(ref nextNode);
 
         CancelSelect();
-        nodeInfo.currentLine = null;
+        nodeInfo.drawingLine = null;
 
         CheckSwitchWarning();
     }
 
     public override void Connect(ref Node connectNode)
     {
-        if(nodeInfo.currentLine.GetLineState() == LineState.SwitchLine)
+        if(nodeInfo.drawingLine.GetLineState() == LineState.SwitchLine)
         {
-            SwitchLine switchLine = nodeInfo.currentLine.GetComponent<SwitchLine>();
+            SwitchLine switchLine = nodeInfo.drawingLine.GetComponent<SwitchLine>();
             switch (switchLine.SwitchLineState)
             {
                 case SwitchLineState.BlueLine:
@@ -149,19 +153,41 @@ public class SwitchNode : Node
             CheckSwitchWarning();
         }
 
-        LineInfo lineInfo = nodeInfo.currentLine.lineInfo;
+        LineInfo lineInfo = nodeInfo.drawingLine.lineInfo;
         lineInfo.endNode = connectNode;
 
         lineInfos.Add(lineInfo);
         connectNode.LineInfos.Add(lineInfo);
+        for (int i = 0; i < lineInfo.wayPointNodes.Count; i++)
+        {
+            WayPointNode wayPointNode = lineInfo.wayPointNodes[i];
+            wayPointNode.lineInfos.Add(lineInfo);
+        }
+        hasDrawRedBlue = redLine != null && blueLine != null;
+    }
 
-        hasDrawSwitchLine = redLine != null && blueLine != null;
+    public void Clear()
+    {
+        if(redLine != null)
+        {
+            Node node = GetNodeFromConnectingNodesWithLine(redLine);
+            GameObject red = redLine.gameObject;
+            Disconnect(ref node, redLine);
+            Destroy(red);
+        }
+        if(blueLine != null)
+        {
+            Node node = GetNodeFromConnectingNodesWithLine(blueLine);
+            GameObject blue = blueLine.gameObject;
+            Disconnect(ref node, blueLine);
+            Destroy(blue);
+        }
     }
 
     public override void DeleteLine()
     {
-        Destroy(nodeInfo.currentLine.gameObject);
-        nodeInfo.currentLine = null;
+        Destroy(nodeInfo.drawingLine.gameObject);
+        nodeInfo.drawingLine = null;
 
         CheckSwitchWarning();
     }
@@ -180,9 +206,9 @@ public class SwitchNode : Node
                     redLine = null;
                     break;
             }
+            hasDrawRedBlue = false;
         }
 
-        hasDrawSwitchLine = false;
         if(deleteNode.NodeState == NodeState.Switch)
         {
             SwitchNode sn = deleteNode.GetComponent<SwitchNode>();
@@ -203,40 +229,32 @@ public class SwitchNode : Node
                     }
                 }
 
-                sn.hasDrawSwitchLine = false;
+                sn.hasDrawRedBlue = false;
                 sn.CheckSwitchWarning();
 
                 combineLines.Remove(line);
                 sn.combineLines.Remove(line);
             }
         }
-        
+
 
         for (int i = 0; i < lineInfos.Count; i++)
         {
             LineInfo lineInfo = lineInfos[i];
-            Node anotherNode = lineInfo.GetAnotherNode(this);
-            if(anotherNode != null)
+            if (lineInfo.line == line)
             {
-                if (anotherNode == deleteNode)
-                {
-                    lineInfos.Remove(lineInfo);
-                    break;
-                }
+                lineInfos.Remove(lineInfo);
+                break;
             }
         }
 
-        for (int i = 0; i < deleteNode.LineInfos.Count; i++)
+        for (int i = 0; i < deleteNode.lineInfos.Count; i++)
         {
-            LineInfo lineInfo = deleteNode.LineInfos[i];
-            Node anotherNode = lineInfo.GetAnotherNode(deleteNode);
-            if(anotherNode != null)
+            LineInfo lineInfo = deleteNode.lineInfos[i];
+            if (lineInfo.line == line)
             {
-                if (anotherNode == this)
-                {
-                    deleteNode.LineInfos.Remove(lineInfo);
-                    break;
-                }
+                deleteNode.lineInfos.Remove(lineInfo);
+                break;
             }
         }
 

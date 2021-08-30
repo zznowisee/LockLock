@@ -22,9 +22,10 @@ public class CustomSystem : MonoBehaviour
     List<Station> stations = new List<Station>();
 
     public List<SwitchInfo> switchInfos;
-    public List<Train> activeTrains;
     public List<TrainInfo> activeTrainInfos;
     public List<NodeSlot> disableNodeSlots;
+
+    bool hasDeletedSth = false;
 
     public enum InputState
     {
@@ -115,8 +116,9 @@ public class CustomSystem : MonoBehaviour
         }
 
         gameState = GameState.Play;
-        foreach (Train train in activeTrains)
+        for (int i = 0; i < activeTrainInfos.Count; i++)
         {
+            Train train = activeTrainInfos[i].movedTrain;
             train.MoveToNextNode();
         }
         OnStartPlay?.Invoke();
@@ -200,16 +202,46 @@ public class CustomSystem : MonoBehaviour
             -1,-1,-1,-1
         };
 
-        activeTrains.Clear();
+        activeTrainInfos.Clear();
+
+        gameState = GameState.Edit;
     }
     #endregion
     void SwitchNodeState()
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (currentNode)
+            NodeSlot nodeSlot = currentNode.NodeSlot;
+
+            for (int i = currentNode.lineInfos.Count - 1; i >= 0; i--)
             {
-                //currentNode.SwitchState();
+                Line line = currentNode.lineInfos[i].line;
+                line.DeleteLine();
+            }
+
+            switch (currentNode.NodeState)
+            {
+                case NodeState.Normal:
+                    // setup new node
+                    SwitchNode switchNode = Instantiate(pfSwitchNode, currentNode.transform.position, Quaternion.identity, nodeParent).GetComponent<SwitchNode>();
+                    nodeSlot.SetNode(switchNode);
+                    switchNode.Setup(nodeSlot.GlobalIndex, nodeSlot);
+                    switchNode.BeSelect();
+                    // delete old node
+                    Destroy(currentNode.gameObject);
+                    currentNode = switchNode;
+
+                    break;
+                case NodeState.Switch:
+                    // setup new node
+                    Node normalNode = Instantiate(pfNode, currentNode.transform.position, Quaternion.identity, nodeParent).GetComponent<Node>();
+                    nodeSlot.SetNode(normalNode);
+                    normalNode.Setup(nodeSlot.GlobalIndex, nodeSlot);
+                    normalNode.BeSelect();
+                    // delete old node
+                    Destroy(currentNode.gameObject);
+                    currentNode = normalNode;
+                    break;
             }
         }
     }
@@ -230,6 +262,7 @@ public class CustomSystem : MonoBehaviour
                     SetNodeAsLineController();
                     DeleteTrain();
                     DeleteStation();
+                    DeleteNode();
                     SwitchNodeState();
                     break;
                 case InputState.LineSelect:
@@ -247,12 +280,30 @@ public class CustomSystem : MonoBehaviour
                     break;
             }
         }
+
+        hasDeletedSth = false;
+    }
+
+    void DeleteNode()
+    {
+        if (Input.GetKeyDown(KeyCode.Delete))
+        {
+            if (hasDeletedSth) return;
+            if(currentNode.Train == null && currentNode.Station == null)
+            {
+                currentNode.NodeSlot.gameObject.SetActive(true);
+                currentNode.NodeSlot.ClearNode();
+                Destroy(currentNode.gameObject);
+                hasDeletedSth = true;
+            }
+        }
     }
 
     void DeleteTrain()
     {
         if (Input.GetKeyDown(KeyCode.Delete))
         {
+            if (hasDeletedSth) return;
             if (currentNode.Train != null)
             {
                 int index = -1;
@@ -289,9 +340,10 @@ public class CustomSystem : MonoBehaviour
                         break;
                     }
                 }
-                activeTrains.Remove(currentNode.Train);
+
                 Destroy(currentNode.Train.gameObject);
                 currentNode.ClearTrain();
+                hasDeletedSth = true;
             }
         }
     }
@@ -300,7 +352,8 @@ public class CustomSystem : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Delete))
         {
-            if(currentNode.Station != null)
+            if (hasDeletedSth) return;
+            if (currentNode.Station != null)
             {
                 int index = -1;
                 switch (currentNode.Station.StationNumber)
@@ -330,6 +383,7 @@ public class CustomSystem : MonoBehaviour
 
                 Destroy(currentNode.Station.gameObject);
                 currentNode.ClearStation();
+                hasDeletedSth = true;
             }
         }
     }
@@ -360,7 +414,6 @@ public class CustomSystem : MonoBehaviour
             train.Setup(currentNode, index);
 
             activeTrainInfos.Add(new TrainInfo() { movedTrain = train, startNode = currentNode, rotation = train.transform.rotation });
-            activeTrains.Add(train);
         }
     }
 
@@ -477,7 +530,7 @@ public class CustomSystem : MonoBehaviour
     {
         if (Input.GetMouseButton(0))
         {
-            //currentDrawingLine = currentNode.currentLine;
+            //currentDrawingLine = currentNode.DrawingLine;
             GameObject wayPointObj = InputHelper.GetObjectUnderMousePosition(wayPointLayer);
             if(wayPointObj != null)
             {
@@ -487,16 +540,16 @@ public class CustomSystem : MonoBehaviour
                 if (currentWayPoint != preWayPoint)
                 {
                     // one more IF check current already in this way point
-                    if (wayPoint.CanReceiveLine(currentDrawingLine))
+                    if (wayPoint.CanReceiveLine(currentNode.DrawingLine))
                     {
                         print("can receive");
-                        wayPoint.Connect(currentDrawingLine);
-                        currentDrawingLine.ConnectWayPoint(wayPoint);
+                        wayPoint.RegisterNewLine(currentNode.DrawingLine);
+                        currentNode.DrawingLine.ConnectWayPoint(wayPoint);
                     }
                     else
                     {
-                        wayPoint.Separate(currentDrawingLine);
-                        currentDrawingLine.SeparateWayPoint(wayPoint);
+                        wayPoint.UnregisterLine(currentNode.DrawingLine);
+                        currentNode.DrawingLine.SeparateWayPoint(wayPoint);
                     }
 
                     preWayPoint = currentWayPoint;

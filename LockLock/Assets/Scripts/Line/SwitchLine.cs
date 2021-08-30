@@ -9,6 +9,11 @@ public class SwitchLine : Line
 
     public Node switchStartNode;
     public Node switchEndNode;
+    Transform switchVisualMark;
+
+    [SerializeField] protected Transform pfMarkLine;
+
+    public Transform SwitchVisualMark { get { return switchVisualMark; } }
 
     public SwitchLineState SwitchLineState { get { return switchLineState; } }
 
@@ -61,8 +66,14 @@ public class SwitchLine : Line
         mark.endColor = palette.defaultCol;
         switchVisualMark = mark.transform;
 
+        gameObject.name = Name;
         print($"Setup New SwitchLine StartNode : '{ lineInfo.startNode.gameObject.name }' " +
               $"SwitchState Is '{ switchLineState }'" +
               $"EndNode : '{ lineInfo.endNode.gameObject.name }'");
+    }
+
+    public override void CancelSelect()
+    {
+        lineVisual.Material.color = switchLineState == SwitchLineState.BlueLine ? palette.dottedUsingCol : palette.dottedWaitingCol;
     }
 }

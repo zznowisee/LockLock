@@ -14,6 +14,10 @@ public class Train : MonoBehaviour
 
     Node preNode;
     Node currentNode;
+    WayPointNode currentWayPointNode;
+
+    Line passingLne;
+    Line passedLine;
 
     TextMeshPro trainTypeText;
     [SerializeField] StationNumber trainNumber;
@@ -21,7 +25,7 @@ public class Train : MonoBehaviour
     MeshRenderer meshRenderer;
     int stationIndex;
 
-    Coroutine currentPassing = null;
+    CustomSystem customSystem;
 
     public int StationIndex
     {
@@ -72,15 +76,18 @@ public class Train : MonoBehaviour
                 break;
         }
         trainTypeText.text = trainNumber.ToString();
+
+        customSystem = FindObjectOfType<CustomSystem>();
     }
 
     public void MoveToNextNode()
     {
-        var nextNode = currentNode.GetNextNode(preNode);
+        var nextNode = currentNode.GetNextNode(preNode, currentNode);
+        passingLne = currentNode.GetLineFromConnectingNodesWithNode(nextNode);
 
         if (nextNode != null)
         {
-            currentPassing = StartCoroutine(MoveToTarget(nextNode));
+            StartCoroutine(MoveToTarget(nextNode));
         }
         else
         {
@@ -88,14 +95,10 @@ public class Train : MonoBehaviour
         }
     }
 
-    public void Stop()
-    {
-        StopCoroutine(currentPassing);
-    }
-
     IEnumerator MoveToTarget(Node nextNode)
     {
         yield return StartCoroutine(RotateToTarget(nextNode));
+
         Vector2 target = nextNode.transform.position;
         float percent = 0f;
         Vector3 startPosition = transform.position;
@@ -109,18 +112,20 @@ public class Train : MonoBehaviour
             yield return null;
         }
 
-        Line passedLine = currentNode.GetLineFromConnectingNodesWithNode(nextNode);
+        preNode = currentNode;
+        currentNode = nextNode;
 
-        Node targetNode = passedLine.StartNode;
-        print($"Passed Line Start Node : {targetNode.gameObject.name}");
-        if(targetNode.NodeState == NodeState.Switch)
+        if (nextNode.NodeState != NodeState.WayPoint)
         {
-            SwitchNode sw = targetNode.GetComponent<SwitchNode>();
-            sw.Switch();
+            if (passingLne.lineInfo.lineState == LineState.SwitchLine)
+            {
+                SwitchNode sw = passingLne.lineInfo.startNode.GetComponent<SwitchNode>();
+                sw.Switch();
+                customSystem = FindObjectOfType<CustomSystem>();
+                customSystem.AddSwitchInfo(sw);
+            }
         }
-
-        UpdateNodeInfo(nextNode);
-
+            
         yield return new WaitForEndOfFrame();
 
         currentNode.OnTrainArrived?.Invoke();
@@ -138,15 +143,6 @@ public class Train : MonoBehaviour
                 Destroy(gameObject);
             }
         }
-    }
-
-    void UpdateNodeInfo(Node arrivedNode)
-    {
-        preNode.ClearTrain();
-        preNode = currentNode;
-
-        currentNode = arrivedNode;
-        currentNode.SetTrain(this);
     }
 
     IEnumerator RotateToTarget(Node nextNode)

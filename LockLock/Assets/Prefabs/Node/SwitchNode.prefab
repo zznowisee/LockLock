@@ -653,9 +653,12 @@ MonoBehaviour:
     station: {fileID: 0}
     nodeSlot: {fileID: 0}
     currentLine: {fileID: 0}
-  pfLine: {fileID: -3856260623877689293, guid: 4f19d0ce5cf38b9489092398e01067c0, type: 3}
+  pfLine: {fileID: 6244738375023981668, guid: 750dcf6fc2ecd4f43a12f353ae647556, type: 3}
+  lineInfos: []
   combineNodes: []
   combineLines: []
+  pfSwitchLine: {fileID: -3856260623877689293, guid: 4f19d0ce5cf38b9489092398e01067c0,
+    type: 3}
 --- !u!1 &8120263904307102462
 GameObject:
   m_ObjectHideFlags: 0
