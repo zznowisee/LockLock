@@ -10,6 +10,7 @@ public class UIManager : MonoBehaviour
     Button startBtn;
     Button stopBtn;
     Button restartBtn;
+    Button clearBtn;
 
     CustomSystem inputSystem;
     private void Awake()
@@ -19,6 +20,7 @@ public class UIManager : MonoBehaviour
 
         startBtn = btnPanel.Find("startBtn").GetComponent<Button>();
         stopBtn = btnPanel.Find("stopBtn").GetComponent<Button>();
+        clearBtn = btnPanel.Find("clearBtn").GetComponent<Button>();
         restartBtn = btnPanel.Find("restartBtn").GetComponent<Button>();
     }
 
@@ -26,6 +28,7 @@ public class UIManager : MonoBehaviour
     {
         startBtn.onClick.AddListener(() => inputSystem.Run());
         stopBtn.onClick.AddListener(() => inputSystem.Stop());
-        restartBtn.onClick.AddListener(()=> inputSystem.Restart());    
+        clearBtn.onClick.AddListener(() => inputSystem.Clear());
+        restartBtn.onClick.AddListener(() => inputSystem.Restart());
     }
 }

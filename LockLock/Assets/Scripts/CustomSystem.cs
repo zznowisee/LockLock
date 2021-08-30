@@ -163,7 +163,7 @@ public class CustomSystem : MonoBehaviour
         }
     }
 
-    public void Restart()
+    public void Clear()
     {
         for (int i = 0; i < trainParent.childCount; i++)
         {
@@ -206,6 +206,49 @@ public class CustomSystem : MonoBehaviour
 
         gameState = GameState.Edit;
     }
+
+    public void Restart()
+    {
+        foreach(NodeSlot slot in disableNodeSlots)
+        {
+            Node node = slot.Node;
+            for (int i = node.lineInfos.Count - 1; i >= 0; i--)
+            {
+                Line line = node.lineInfos[i].line;
+                line.DeleteLine();
+            }
+
+            if(node.NodeState == NodeState.Switch)
+            {
+                Node normalNode = Instantiate(pfNode, node.transform.position, Quaternion.identity, nodeParent).GetComponent<Node>();
+                slot.SetNode(normalNode);
+                normalNode.Setup(slot.GlobalIndex, slot);
+                Destroy(node.gameObject);
+            }
+
+            if(node.Station != null)
+            {
+                Destroy(node.Station.gameObject);
+                node.ClearStation();
+            }
+
+            if (node.Train != null)
+            {
+                Destroy(node.Train.gameObject);
+                node.ClearTrain();
+            }
+        }
+
+        trainIndices = new int[]
+        {
+            -1,-1,-1,-1
+        };
+        stationIndices = new int[]
+        {
+            -1,-1,-1,-1
+        };
+    }
+
     #endregion
     void SwitchNodeState()
     {
@@ -293,6 +336,13 @@ public class CustomSystem : MonoBehaviour
             {
                 currentNode.NodeSlot.gameObject.SetActive(true);
                 currentNode.NodeSlot.ClearNode();
+
+                for (int i = currentNode.lineInfos.Count - 1; i >= 0; i--)
+                {
+                    Line line = currentNode.lineInfos[i].line;
+                    line.DeleteLine();
+                }
+
                 Destroy(currentNode.gameObject);
                 hasDeletedSth = true;
             }

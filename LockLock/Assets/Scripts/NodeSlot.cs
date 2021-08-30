@@ -17,6 +17,7 @@ public class NodeSlot : MonoBehaviour
             return globalIndex;
         }
     }
+    public Node Node { get { return node; } }
     public bool IsEmpty { get { return node == null; } }
     public void Setup(Vector2Int globalIndex_)
     {
