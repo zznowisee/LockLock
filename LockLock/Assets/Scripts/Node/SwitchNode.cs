@@ -71,7 +71,7 @@ public class SwitchNode : Node
         target.hasDrawRedBlue = target.redLine != null && target.blueLine != null;
     }
 
-    public override void DrawLine(Vector3 endPosition)
+    public override void DrawLine()
     {
         if (nodeInfo.drawingLine == null)
         {
@@ -98,7 +98,8 @@ public class SwitchNode : Node
             }
         }
 
-        nodeInfo.drawingLine.Draw(endPosition);
+        Vector2 pos = InputHelper.CalculateEndPosition(InputHelper.MouseWorldPositionIn2D, transform.position);
+        nodeInfo.drawingLine.Draw(pos);
     }
 
     public override void FinishDraw(ref Node nextNode)

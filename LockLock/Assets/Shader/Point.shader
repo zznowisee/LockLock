@@ -3,6 +3,7 @@
 	Properties
 	{
 		_Color ("Color", Color) = (1,1,1,1)
+		_Alpha ("Alpha",Range(0.0,1.0)) = 1.0
 	}
 	SubShader
 	{
@@ -32,7 +33,7 @@
 			};
 
 			float4 _Color;
-
+			float _Alpha;
 
 			v2f vert (appdata v)
 			{
@@ -48,6 +49,7 @@
 					float sqrDst = dot(centreOffset, centreOffset);
 					float delta = fwidth(sqrt(sqrDst));
 					float alpha = 1 - smoothstep(1 - delta, 1 + delta, sqrDst);
+					alpha *= _Alpha;
 
 					return float4(_Color.xyz, alpha);
 			}

@@ -633,7 +633,7 @@ CircleCollider2D:
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
-  m_Radius: 1
+  m_Radius: 1.5
 --- !u!114 &2430228766981815048
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -647,12 +647,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   nodeInfo:
-    nodeState: 0
     nodeIndex: {x: 0, y: 0}
-    train: {fileID: 0}
-    station: {fileID: 0}
+    nodeState: 0
     nodeSlot: {fileID: 0}
-    currentLine: {fileID: 0}
+    drawingLine: {fileID: 0}
+    station: {fileID: 0}
+    train: {fileID: 0}
   pfLine: {fileID: 6244738375023981668, guid: 750dcf6fc2ecd4f43a12f353ae647556, type: 3}
   lineInfos: []
   combineNodes: []
@@ -684,7 +684,7 @@ Transform:
   m_GameObject: {fileID: 8120263904307102462}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 1}
+  m_LocalScale: {x: 3, y: 3, z: 3}
   m_Children:
   - {fileID: 3743897864632923704}
   - {fileID: 2101958340539940414}

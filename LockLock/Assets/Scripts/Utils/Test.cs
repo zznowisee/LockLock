@@ -4,39 +4,50 @@ using UnityEngine;
 
 public class Test : MonoBehaviour
 {
-    List<Vector2Int> tests;
-
-    private void Awake()
-    {
-        tests = new List<Vector2Int>();
-
-        tests.Add(Vector2Int.down);
-        tests.Add(Vector2Int.one);
-        tests.Add(Vector2Int.up);
-        tests.Add(Vector2Int.left);
-
-        for (int i = 0; i < tests.Count; i++)
-        {
-            Vector2Int index = tests[i];
-            if(index.x == 1)
-            {
-                tests.Remove(index);
-            }
-        }
-
-        for (int i = 0; i < tests.Count; i++)
-        {
-            print(tests[i]);
-        }
-    }
-
     private void Update()
     {
-        
-    }
+/*        Vector2 mousePos = InputHelper.MouseWorldPositionIn2D;
 
-    public void GenerateMesh()
-    {
-        
+        Vector2 dir = (mousePos - (Vector2)transform.position).normalized;
+        float angle = Mathf.Atan2(dir.x, dir.y) * Mathf.Rad2Deg;
+        if (angle < 0f)
+        {
+            angle += 360f;
+        }
+
+        float targetAngle = 0f;
+        if (angle < 60f)
+        {
+            print("angle < 60");
+            targetAngle = 30f;
+        }
+        else if (angle > 60f && angle < 120f)
+        {
+            print("angle > 60f && angle < 120f");
+            targetAngle = 90f;
+        }
+        else if (angle > 120f && angle < 180f)
+        {
+            print("angle > 120f && angle < 180f");
+            targetAngle = 150f;
+        }
+        else if (angle > 180f && angle < 240f)
+        {
+            print("angle > 180f && angle < 240f");
+            targetAngle = 210f;
+        }
+        else if (angle > 240f && angle < 300f)
+        {
+            print("angle > 240f && angle < 300f");
+            targetAngle = 270f;
+        }
+        else if (angle > 300f)
+        {
+            print("angle > 300f");
+            targetAngle = 330f;
+        }
+
+        float slope = Mathf.Tan(targetAngle * Mathf.Deg2Rad);
+        print(slope);*/
     }
 }

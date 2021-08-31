@@ -129,20 +129,24 @@ public class Train : MonoBehaviour
         yield return new WaitForEndOfFrame();
 
         currentNode.OnTrainArrived?.Invoke();
-        CheckArrive();
-        MoveToNextNode();
+        if(!CheckArrive())
+            MoveToNextNode();
     }
 
-    void CheckArrive()
+    bool CheckArrive()
     {
         if(currentNode.Station != null)
         {
             if (currentNode.Station.StationNumber == trainNumber)
             {
+                print($"{StationIndex} Train Arrive!");
                 currentNode.ClearStation();
-                Destroy(gameObject);
+                gameObject.SetActive(false);
+                return true;
             }
         }
+
+        return false;
     }
 
     IEnumerator RotateToTarget(Node nextNode)

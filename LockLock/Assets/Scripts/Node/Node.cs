@@ -7,6 +7,7 @@ public enum NodeState { Normal, Switch, WayPoint }
 public class Node : MonoBehaviour
 {
     [SerializeField] protected NodeInfo nodeInfo;
+    public float radius = 4f;
     public Action OnTrainArrived;
 
     protected CustomSystem customSystem;
@@ -18,6 +19,8 @@ public class Node : MonoBehaviour
 
     LineController lineController;
     bool isLineController = false;
+
+
 
     public NodeState NodeState { get { return nodeInfo.nodeState; } }
     public Vector2Int GlobalIndex { get { return nodeInfo.nodeIndex; } }
@@ -33,7 +36,7 @@ public class Node : MonoBehaviour
 
     public void ClearStation()
     {
-        Destroy(nodeInfo.station.gameObject);
+        nodeInfo.station.gameObject.SetActive(false);
         nodeInfo.station = null;
     }
 
@@ -72,7 +75,7 @@ public class Node : MonoBehaviour
     public void BeSelect() => beSelectGraphic.gameObject.SetActive(true);
     public void CancelSelect() => beSelectGraphic.gameObject.SetActive(false);
 
-    public virtual void DrawLine(Vector3 endPosition)
+    public virtual void DrawLine()
     {
         if (nodeInfo.drawingLine == null)
         {
@@ -80,7 +83,9 @@ public class Node : MonoBehaviour
             nodeInfo.drawingLine.Setup(this, LineState.NormalLine);
         }
 
-        nodeInfo.drawingLine.Draw(endPosition);
+        Vector2 pos = InputHelper.CalculateEndPosition(InputHelper.MouseWorldPositionIn2D, transform.position);
+
+        nodeInfo.drawingLine.Draw(pos);
     }
 
     public virtual void FinishDraw(ref Node nextNode)

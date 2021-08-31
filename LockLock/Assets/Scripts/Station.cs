@@ -12,15 +12,15 @@ public class Station : MonoBehaviour
     TextMeshPro stationTypeText;
 
     SpriteRenderer spriteRenderer;
-
+    int stationIndex;
     public StationNumber StationNumber { get { return stationNumber; } }
-
+    public int StationIndex { get { return stationIndex; } }
     public void Setup(Node stayNode, int index)
     {
         spriteRenderer = transform.Find("sprite").GetComponent<SpriteRenderer>();
         this.stayNode = stayNode;
         stationTypeText = transform.Find("stationTypeText").GetComponent<TextMeshPro>();
-
+        stationIndex = index;
         switch (index)
         {
             case 0:

@@ -1,2 +1,10 @@
 Base path: 'D:/C#lianxi/2019.4.17f1/Editor/Data', plugins path 'D:/C#lianxi/2019.4.17f1/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
+Cmd: preprocess
+  insize=962 outsize=275 ok=1
+Cmd: preprocess
+  insize=975 outsize=275 ok=1
+Cmd: preprocess
+  insize=951 outsize=275 ok=1
+Cmd: preprocess
+  insize=1029 outsize=315 ok=1

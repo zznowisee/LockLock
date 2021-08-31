@@ -19,10 +19,9 @@ public class CustomSystem : MonoBehaviour
     [SerializeField] Transform pfSwitchNode;
     [SerializeField] Transform pfWayPointNode;
 
-    List<Station> stations = new List<Station>();
-
     public List<SwitchInfo> switchInfos;
     public List<TrainInfo> activeTrainInfos;
+    public List<StationInfo> activeStationInfos;
     public List<NodeSlot> disableNodeSlots;
 
     bool hasDeletedSth = false;
@@ -84,6 +83,7 @@ public class CustomSystem : MonoBehaviour
     void Start()
     {
         activeTrainInfos = new List<TrainInfo>();
+        activeStationInfos = new List<StationInfo>();
         switchInfos = new List<SwitchInfo>();
         disableNodeSlots = new List<NodeSlot>();
     }
@@ -118,7 +118,7 @@ public class CustomSystem : MonoBehaviour
         gameState = GameState.Play;
         for (int i = 0; i < activeTrainInfos.Count; i++)
         {
-            Train train = activeTrainInfos[i].movedTrain;
+            Train train = activeTrainInfos[i].activeTrain;
             train.MoveToNextNode();
         }
         OnStartPlay?.Invoke();
@@ -146,20 +146,37 @@ public class CustomSystem : MonoBehaviour
 
         for (int i = 0; i < activeTrainInfos.Count; i++)
         {
-            Node currentNode = activeTrainInfos[i].movedTrain.CurrentNode;
+            Node currentNode = activeTrainInfos[i].activeTrain.CurrentNode;
             currentNode.ClearTrain();
         }
 
         for (int i = 0; i < activeTrainInfos.Count; i++)
         {
             Node startNode = activeTrainInfos[i].startNode;
-            Train train = activeTrainInfos[i].movedTrain;
+            Train train = activeTrainInfos[i].activeTrain;
 
             train.StopAllCoroutines();
             startNode.SetTrain(train);
             train.transform.position = startNode.transform.position;
             train.transform.rotation = activeTrainInfos[i].rotation;
             train.Setup(startNode, train.StationIndex);
+
+            if (!train.gameObject.activeSelf)
+            {
+                train.gameObject.SetActive(true);
+            }
+        }
+
+        for (int i = 0; i < activeStationInfos.Count; i++)
+        {
+            Node startNode = activeStationInfos[i].startNode;
+            Station station = activeStationInfos[i].activeStation;
+            startNode.SetStation(station);
+
+            if (!station.gameObject.activeSelf)
+            {
+                station.gameObject.SetActive(true);
+            }
         }
     }
 
@@ -203,6 +220,7 @@ public class CustomSystem : MonoBehaviour
         };
 
         activeTrainInfos.Clear();
+        activeStationInfos.Clear();
 
         gameState = GameState.Edit;
     }
@@ -247,6 +265,9 @@ public class CustomSystem : MonoBehaviour
         {
             -1,-1,-1,-1
         };
+
+        activeTrainInfos.Clear();
+        activeStationInfos.Clear();
     }
 
     #endregion
@@ -270,10 +291,22 @@ public class CustomSystem : MonoBehaviour
                     nodeSlot.SetNode(switchNode);
                     switchNode.Setup(nodeSlot.GlobalIndex, nodeSlot);
                     switchNode.BeSelect();
+                    if (currentNode.Train != null)
+                    {
+                        Train train = currentNode.Train;
+                        switchNode.SetTrain(currentNode.Train);
+                        train.Setup(switchNode, train.StationIndex);
+                    }
+                    if (currentNode.Station != null)
+                    {
+                        Station station = currentNode.Station;
+                        switchNode.SetStation(currentNode.Station);
+                        station.Setup(switchNode, station.StationIndex);
+                    }
+
                     // delete old node
                     Destroy(currentNode.gameObject);
                     currentNode = switchNode;
-
                     break;
                 case NodeState.Switch:
                     // setup new node
@@ -281,6 +314,19 @@ public class CustomSystem : MonoBehaviour
                     nodeSlot.SetNode(normalNode);
                     normalNode.Setup(nodeSlot.GlobalIndex, nodeSlot);
                     normalNode.BeSelect();
+                    if (currentNode.Train != null)
+                    {
+                        Train train = currentNode.Train;
+                        normalNode.SetTrain(currentNode.Train);
+                        train.Setup(normalNode, train.StationIndex);
+                    }
+
+                    if (currentNode.Station != null)
+                    {
+                        Station station = currentNode.Station;
+                        normalNode.SetStation(currentNode.Station);
+                        station.Setup(normalNode, station.StationIndex);
+                    }
                     // delete old node
                     Destroy(currentNode.gameObject);
                     currentNode = normalNode;
@@ -384,7 +430,7 @@ public class CustomSystem : MonoBehaviour
 
                 for (int i = 0; i < activeTrainInfos.Count; i++)
                 {
-                    if(activeTrainInfos[i].movedTrain == currentNode.Train)
+                    if(activeTrainInfos[i].activeTrain == currentNode.Train)
                     {
                         activeTrainInfos.RemoveAt(i);
                         break;
@@ -463,7 +509,7 @@ public class CustomSystem : MonoBehaviour
             currentNode.SetTrain(train);
             train.Setup(currentNode, index);
 
-            activeTrainInfos.Add(new TrainInfo() { movedTrain = train, startNode = currentNode, rotation = train.transform.rotation });
+            activeTrainInfos.Add(new TrainInfo() { activeTrain = train, startNode = currentNode, rotation = train.transform.rotation });
         }
     }
 
@@ -491,7 +537,8 @@ public class CustomSystem : MonoBehaviour
             Station station = Instantiate(pfStation, currentNode.transform.position, Quaternion.identity, stationParent).GetComponent<Station>();
             currentNode.SetStation(station);
             station.Setup(currentNode, index);
-            stations.Add(station);
+
+            activeStationInfos.Add(new StationInfo() { activeStation = station, startNode = currentNode });
         }
     }
 
@@ -612,8 +659,7 @@ public class CustomSystem : MonoBehaviour
                 currentWayPoint = null;
             }
 
-            Vector2 endPosition = InputHelper.MouseWorldPositionIn2D;
-            currentNode.DrawLine(endPosition);
+            currentNode.DrawLine();
         }
 
         if (Input.GetMouseButtonUp(0))
@@ -755,8 +801,14 @@ public class CustomSystem : MonoBehaviour
 
     public struct TrainInfo
     {
-        public Train movedTrain;
+        public Train activeTrain;
         public Node startNode;
         public Quaternion rotation;
-    } 
+    }
+
+    public struct StationInfo
+    {
+        public Station activeStation;
+        public Node startNode;
+    }
 }
