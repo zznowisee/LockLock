@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class GridSystem : MonoBehaviour
 {
+
+    public static GridSystem Instance;
+
     [SerializeField] float cameraAreaKeep;
     [SerializeField] float cellSize;
     [SerializeField] int width;
@@ -15,7 +18,10 @@ public class GridSystem : MonoBehaviour
     [SerializeField] NodeSlot pfNodeSlot;
 
     public TrainSetup trainSetup;
+    public int GridWidth { get { return width; } }
+    public int GridHeight { get { return height; } }
 
+    public float CellSize { get { return cellSize; } }
 
     private void OnValidate()
     {
@@ -31,6 +37,24 @@ public class GridSystem : MonoBehaviour
         {
             cellSize = 0.01f;
         }
+    }
+
+    public Node GetNodeFromGlobalIndex(Vector2Int index)
+    {
+        if (index.x < 0 || index.x > width - 1 || index.y < 0 || index.y > height - 1) return null;
+
+        NodeSlot nodeSlot = grid.array[index.x, index.y].nodeSlot;
+        if(nodeSlot != null)
+        {
+            return nodeSlot.Node;
+        }
+
+        return null;
+    }
+
+    void Awake()
+    {
+        Instance = this;
     }
 
     void Start()
@@ -66,7 +90,7 @@ public class GridSystem : MonoBehaviour
                 // setup node slot
                 GridSlot gridSlot = grid.GetValue(x, y);
                 NodeSlot nodeSlot = Instantiate(pfNodeSlot, position, Quaternion.identity, nodeParent);
-                gridSlot.SetNodeSlot(nodeSlot.transform);
+                gridSlot.SetNodeSlot(nodeSlot);
 
                 nodeSlot.Setup(globalIndex);
                 nodeSlot.gameObject.name = "NodeSlot_" + x + "_" + y;
@@ -81,7 +105,7 @@ public class GridSlot
     int y;
     Grid<GridSlot> grid;
 
-    Transform nodeSlot;
+    public NodeSlot nodeSlot;
 
     public GridSlot(int x_, int y_, Grid<GridSlot> grid_)
     {
@@ -90,6 +114,6 @@ public class GridSlot
         grid = grid_;
     }
 
-    public void SetNodeSlot(Transform nodeSlot_) => nodeSlot = nodeSlot_;
+    public void SetNodeSlot(NodeSlot nodeSlot_) => nodeSlot = nodeSlot_;
 
 }

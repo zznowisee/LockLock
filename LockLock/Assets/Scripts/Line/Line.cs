@@ -163,6 +163,12 @@ public class Line : MonoBehaviour
 
     public void DeleteLine()
     {
+        for (int i = 0; i < lineInfo.wayPointNodes.Count; i++)
+        {
+            WayPointNode wayPointNode = lineInfo.wayPointNodes[i];
+            wayPointNode.UnregisterLine(this);
+            wayPointNode.lineInfos.Remove(lineInfo);
+        }
         lineInfo.startNode.Disconnect(ref lineInfo.endNode, this);
         Destroy(gameObject);
     }
@@ -222,7 +228,7 @@ public class LineInfo
     {
         if (wayPointNodes.Contains(wayPointNode))
         {
-            if(other.NodeState == NodeState.WayPoint)
+            if(other.NodeType == NodeType.WayPoint)
             {
                 WayPointNode wpn = other.GetComponent<WayPointNode>();
                 if (wayPointNodes.Contains(wpn))
@@ -252,7 +258,7 @@ public class LineInfo
     {
         bool forwardOrder = true;
         int wayPointIndex = wayPointNodes.IndexOf(wayPointNode);
-        if (preNode.NodeState == NodeState.WayPoint)
+        if (preNode.NodeType == NodeType.WayPoint)
         {
             WayPointNode wpn = preNode.GetComponent<WayPointNode>();
             if(wayPointNodes.IndexOf(wpn) > wayPointIndex)

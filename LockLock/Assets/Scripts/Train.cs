@@ -115,7 +115,7 @@ public class Train : MonoBehaviour
         preNode = currentNode;
         currentNode = nextNode;
 
-        if (nextNode.NodeState != NodeState.WayPoint)
+        if (nextNode.NodeType != NodeType.WayPoint)
         {
             if (passingLne.lineInfo.lineState == LineState.SwitchLine)
             {

@@ -236,7 +236,7 @@ public class CustomSystem : MonoBehaviour
                 line.DeleteLine();
             }
 
-            if(node.NodeState == NodeState.Switch)
+            if(node.NodeType == NodeType.Switch)
             {
                 Node normalNode = Instantiate(pfNode, node.transform.position, Quaternion.identity, nodeParent).GetComponent<Node>();
                 slot.SetNode(normalNode);
@@ -283,9 +283,9 @@ public class CustomSystem : MonoBehaviour
                 line.DeleteLine();
             }
 
-            switch (currentNode.NodeState)
+            switch (currentNode.NodeType)
             {
-                case NodeState.Normal:
+                case NodeType.Normal:
                     // setup new node
                     SwitchNode switchNode = Instantiate(pfSwitchNode, currentNode.transform.position, Quaternion.identity, nodeParent).GetComponent<SwitchNode>();
                     nodeSlot.SetNode(switchNode);
@@ -308,7 +308,7 @@ public class CustomSystem : MonoBehaviour
                     Destroy(currentNode.gameObject);
                     currentNode = switchNode;
                     break;
-                case NodeState.Switch:
+                case NodeType.Switch:
                     // setup new node
                     Node normalNode = Instantiate(pfNode, currentNode.transform.position, Quaternion.identity, nodeParent).GetComponent<Node>();
                     nodeSlot.SetNode(normalNode);
@@ -627,8 +627,10 @@ public class CustomSystem : MonoBehaviour
     {
         if (Input.GetMouseButton(0))
         {
-            //currentDrawingLine = currentNode.DrawingLine;
-            GameObject wayPointObj = InputHelper.GetObjectUnderMousePosition(wayPointLayer);
+            currentNode.DrawLine();
+
+            Vector2 position = currentNode.DrawingLine.GetComponent<LineVisual>().LastPointPosition;
+            GameObject wayPointObj = InputHelper.GetObjectUnderPosition(wayPointLayer, position);
             if(wayPointObj != null)
             {
                 WayPointNode wayPoint = wayPointObj.GetComponent<WayPointNode>();
@@ -645,6 +647,7 @@ public class CustomSystem : MonoBehaviour
                     }
                     else
                     {
+                        print("Separate WayPoint");
                         wayPoint.UnregisterLine(currentNode.DrawingLine);
                         currentNode.DrawingLine.SeparateWayPoint(wayPoint);
                     }
@@ -658,13 +661,12 @@ public class CustomSystem : MonoBehaviour
                 preWayPoint = null;
                 currentWayPoint = null;
             }
-
-            currentNode.DrawLine();
         }
 
         if (Input.GetMouseButtonUp(0))
         {
-            GameObject nodeObj = InputHelper.GetObjectUnderMousePosition(nodeLayer);
+            Vector2 position = currentNode.DrawingLine.GetComponent<LineVisual>().LastPointPosition;
+            GameObject nodeObj = InputHelper.GetObjectUnderPosition(nodeLayer, position);
             if (nodeObj)
             {
                 Node node = nodeObj.GetComponent<Node>();
@@ -689,20 +691,6 @@ public class CustomSystem : MonoBehaviour
             }
         }
     }
-
-/*    Vector2 GetLineEndPosition(Vector2 mousePos)
-    {
-        Node closestNode = null;
-        Collider2D[] aroundNodes = Physics2D.OverlapCircleAll(mousePos, 6f, nodeLayer);
-
-        float minSqrDst = float.MaxValue;
-        foreach(Collider2D collider in aroundNodes)
-        {
-            //if()
-        }
-
-        return mousePos;
-    }*/
 
     void SelectNode()
     {

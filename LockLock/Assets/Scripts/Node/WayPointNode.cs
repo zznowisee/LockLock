@@ -4,14 +4,11 @@ using UnityEngine;
 
 public class WayPointNode : Node
 {
-    List<Line> lines;
-
     private void Awake()
     {
-        lines = new List<Line>();
         beSelectGraphic = transform.Find("sprite").Find("beSelectGraphic");
 
-        nodeInfo.nodeState = NodeState.WayPoint;
+        nodeInfo.nodeType = NodeType.WayPoint;
     }
 
     public override void Setup(Vector2Int nodeIndex, NodeSlot nodeSlot)
@@ -23,20 +20,28 @@ public class WayPointNode : Node
 
     public void RegisterNewLine(Line line)
     {
-        lines.Add(line);
         print("RegisterNewLine");
+
+        lineInfos.Add(line.lineInfo);
+
         beSelectGraphic.gameObject.SetActive(true);
     }
 
     public void UnregisterLine(Line line)
     {
         print("UnregisterLine");
-        lines.Remove(line);
+
+        lineInfos.Remove(line.lineInfo);
 
         beSelectGraphic.gameObject.SetActive(false);
     }
 
-    public bool CanReceiveLine(Line line) => !lines.Contains(line);
+    public bool CanReceiveLine(Line line)
+    {
+        for (int i = 0; i < lineInfos.Count; i++)
+            if (lineInfos[i].line == line) return false;
+        return true;
+    }
 
     public override Line GetLineFromConnectingNodesWithNode(Node node)
     {

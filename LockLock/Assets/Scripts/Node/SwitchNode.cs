@@ -27,7 +27,7 @@ public class SwitchNode : Node
     public override void Setup(Vector2Int nodeIndex, NodeSlot nodeSlot)
     {
         base.Setup(nodeIndex, nodeSlot);
-        nodeInfo.nodeState = NodeState.Switch;
+        nodeInfo.nodeType = NodeType.Switch;
 
         combineNodes = new List<SwitchNode>();
         combineLines = new List<Line>();
@@ -97,8 +97,9 @@ public class SwitchNode : Node
                 nodeInfo.drawingLine.Setup(this, LineState.NormalLine);
             }
         }
+        LineInfo lineInfo = nodeInfo.drawingLine.lineInfo;
+        Vector2 pos = InputHelper.CalculateEndPosition(InputHelper.MouseWorldPositionIn2D, this);
 
-        Vector2 pos = InputHelper.CalculateEndPosition(InputHelper.MouseWorldPositionIn2D, transform.position);
         nodeInfo.drawingLine.Draw(pos);
     }
 
@@ -128,7 +129,7 @@ public class SwitchNode : Node
                     break;
             }
 
-            if (connectNode.NodeState == NodeState.Switch)
+            if (connectNode.NodeType == NodeType.Switch)
             {
                 SwitchNode switchNode = connectNode.GetComponent<SwitchNode>();
 
@@ -159,11 +160,11 @@ public class SwitchNode : Node
 
         lineInfos.Add(lineInfo);
         connectNode.LineInfos.Add(lineInfo);
-        for (int i = 0; i < lineInfo.wayPointNodes.Count; i++)
+/*        for (int i = 0; i < lineInfo.wayPointNodes.Count; i++)
         {
             WayPointNode wayPointNode = lineInfo.wayPointNodes[i];
             wayPointNode.lineInfos.Add(lineInfo);
-        }
+        }*/
         hasDrawRedBlue = redLine != null && blueLine != null;
     }
 
@@ -187,9 +188,7 @@ public class SwitchNode : Node
 
     public override void DeleteLine()
     {
-        Destroy(nodeInfo.drawingLine.gameObject);
-        nodeInfo.drawingLine = null;
-
+        base.DeleteLine();
         CheckSwitchWarning();
     }
 
@@ -210,7 +209,7 @@ public class SwitchNode : Node
             hasDrawRedBlue = false;
         }
 
-        if(deleteNode.NodeState == NodeState.Switch)
+        if(deleteNode.NodeType == NodeType.Switch)
         {
             SwitchNode sn = deleteNode.GetComponent<SwitchNode>();
             if (combineNodes.Contains(sn))

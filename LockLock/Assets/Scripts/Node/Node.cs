@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public enum NodeState { Normal, Switch, WayPoint }
+public enum NodeType { Normal, Switch, WayPoint }
 public class Node : MonoBehaviour
 {
     [SerializeField] protected NodeInfo nodeInfo;
@@ -20,9 +20,8 @@ public class Node : MonoBehaviour
     LineController lineController;
     bool isLineController = false;
 
-
-
-    public NodeState NodeState { get { return nodeInfo.nodeState; } }
+    public NodeInfo NodeInfo { get { return nodeInfo; } }
+    public NodeType NodeType { get { return nodeInfo.nodeType; } }
     public Vector2Int GlobalIndex { get { return nodeInfo.nodeIndex; } }
     public Station Station { get { return nodeInfo.station; } }
     public Train Train { get { return nodeInfo.train; } }
@@ -51,7 +50,7 @@ public class Node : MonoBehaviour
 
         lineController.gameObject.SetActive(false);
 
-        nodeInfo.nodeState = NodeState.Normal;
+        nodeInfo.nodeType = NodeType.Normal;
     }
 
     public void SetAsLineController(Line target)
@@ -82,8 +81,8 @@ public class Node : MonoBehaviour
             nodeInfo.drawingLine = Instantiate(pfLine, transform.position, Quaternion.identity, customSystem.lineParent);
             nodeInfo.drawingLine.Setup(this, LineState.NormalLine);
         }
-
-        Vector2 pos = InputHelper.CalculateEndPosition(InputHelper.MouseWorldPositionIn2D, transform.position);
+        LineInfo lineInfo = nodeInfo.drawingLine.lineInfo;
+        Vector2 pos = InputHelper.CalculateEndPosition(InputHelper.MouseWorldPositionIn2D, this);
 
         nodeInfo.drawingLine.Draw(pos);
     }
@@ -99,6 +98,12 @@ public class Node : MonoBehaviour
 
     public virtual void DeleteLine()
     {
+        for (int i = 0; i < nodeInfo.drawingLine.lineInfo.wayPointNodes.Count; i++)
+        {
+            WayPointNode wpn = nodeInfo.drawingLine.lineInfo.wayPointNodes[i];
+            wpn.UnregisterLine(nodeInfo.drawingLine);
+        }
+
         Destroy(nodeInfo.drawingLine.gameObject);
         nodeInfo.drawingLine = null;
     }
@@ -143,12 +148,6 @@ public class Node : MonoBehaviour
     {
         LineInfo lineInfo = nodeInfo.drawingLine.lineInfo;
         lineInfo.endNode = connectNode;
-
-        for (int i = 0; i < lineInfo.wayPointNodes.Count; i++)
-        {
-            WayPointNode wayPointNode = lineInfo.wayPointNodes[i];
-            wayPointNode.lineInfos.Add(lineInfo);
-        }
 
         lineInfos.Add(lineInfo);
         connectNode.lineInfos.Add(lineInfo);
@@ -254,77 +253,6 @@ public class Node : MonoBehaviour
             return canPassLines[0];
         }
     }
-    #region Refac
-    /*    public virtual Node GetNextNode(Node preNode, Node beginNode)
-        {
-            if (lineInfos.Count >= 2)
-            {
-                int canPassNum = 0;
-                for (int i = 0; i < lineInfos.Count; i++)
-                {
-                    if(lineInfos[i].GetAnotherNode(this) == preNode)
-                    {
-                        continue;
-                    }
-
-                    Line line = lineInfos[i].line;
-                    if (line.IsOneWayLine())
-                    {
-                        if (!line.CanPassBaseOnOneWay(this)) continue;
-                    }
-
-                    if (!line.CanPassBaseOnController()) continue;
-
-                    if (lineInfos[i].canPass)
-                    {
-                        canPassNum++;
-                    }
-                }
-
-                if (canPassNum >= 2)
-                {
-                    print("More than 2 choices, Can't move");
-                    return null;
-                }
-            }
-
-            for (int i = 0; i < lineInfos.Count; i++)
-            {
-                if (lineInfos[i].GetAnotherNode(beginNode) == this) continue;
-
-                if (lineInfos[i].wayPointNodes.Count > 0 && lineInfos[i].wayPointNodes[lineInfos[i].wayPointNodes.Count - 1] != preNode)
-                {
-                    print("Enter First Way Point");
-                    return lineInfos[i].wayPointNodes[0];
-                }
-
-                if (lineInfos[i].GetAnotherNode(this) == preNode)
-                {
-                    continue;
-                }
-
-                if (!lineInfos[i].canPass)
-                {
-                    print("can't pass");
-                    continue;
-                }
-
-                if (lineInfos[i].line.IsOneWayLine())
-                {
-                    if (!lineInfos[i].line.CanPassBaseOnOneWay(this)) continue;
-                }
-
-                if (!lineInfos[i].line.CanPassBaseOnController())
-                {
-                    continue;
-                }
-
-                return lineInfos[i].GetAnotherNode(this);
-            }
-
-            return null;
-        }*/
-    #endregion
 
     public virtual void OnTrainArrivedNode()
     {
@@ -333,10 +261,10 @@ public class Node : MonoBehaviour
 }
 
 [Serializable]
-public struct NodeInfo
+public class NodeInfo
 {
     public Vector2Int nodeIndex;
-    public NodeState nodeState;
+    public NodeType nodeType;
     public NodeSlot nodeSlot;
     public Line drawingLine;
     public Station station;
