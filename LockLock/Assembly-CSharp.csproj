@@ -56,30 +56,30 @@
     <Analyzer Include="C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\Switch\Line\SwitchLine.cs" />
-    <Compile Include="Assets\Scripts\Switch\ScriptableObject\LinePalette.cs" />
-    <Compile Include="Assets\Scripts\Switch\Utils\Test.cs" />
-    <Compile Include="Assets\Scripts\Switch\Utils\Grid.cs" />
-    <Compile Include="Assets\Scripts\Switch\Line\LineVisual.cs" />
-    <Compile Include="Assets\Scripts\Switch\Node\WayPointNode.cs" />
-    <Compile Include="Assets\Scripts\Switch\UIManager.cs" />
-    <Compile Include="Assets\Scripts\Switch\ScriptableObject\TrainSetup.cs" />
-    <Compile Include="Assets\Scripts\Switch\ScriptableObject\StationTrainPalette.cs" />
-    <Compile Include="Assets\Scripts\Switch\NodeSlot.cs" />
-    <Compile Include="Assets\Scripts\Switch\Node\NodeAnimationManager.cs" />
-    <Compile Include="Assets\Scripts\Switch\InputHelper.cs" />
-    <Compile Include="Assets\Scripts\Switch\GridSystem.cs" />
-    <Compile Include="Assets\Scripts\Switch\Utils\Utils.cs" />
-    <Compile Include="Assets\Scripts\Switch\Station.cs" />
-    <Compile Include="Assets\Scripts\Switch\Train.cs" />
-    <Compile Include="Assets\Scripts\Switch\Node\NormalNode.cs" />
-    <Compile Include="Assets\Scripts\Switch\Utils\MeshGenerator.cs" />
-    <Compile Include="Assets\Scripts\Switch\Line\Line.cs" />
-    <Compile Include="Assets\Scripts\Switch\Node\SwitchNode.cs" />
-    <Compile Include="Assets\Scripts\Switch\ScriptableObject\NodeSlotPalette.cs" />
-    <Compile Include="Assets\Scripts\Switch\StationNumber.cs" />
-    <Compile Include="Assets\Scripts\Switch\CustomSystem.cs" />
-    <Compile Include="Assets\Scripts\Switch\Line\LineController.cs" />
+    <Compile Include="Assets\Scripts\Electron.cs" />
+    <Compile Include="Assets\Scripts\Line\SwitchLine.cs" />
+    <Compile Include="Assets\Scripts\ScriptableObject\LinePalette.cs" />
+    <Compile Include="Assets\Scripts\Utils\Test.cs" />
+    <Compile Include="Assets\Scripts\Utils\Grid.cs" />
+    <Compile Include="Assets\Scripts\Line\LineVisual.cs" />
+    <Compile Include="Assets\Scripts\Node\WayPointNode.cs" />
+    <Compile Include="Assets\Scripts\UIManager.cs" />
+    <Compile Include="Assets\Scripts\ReactionManager.cs" />
+    <Compile Include="Assets\Scripts\ElectronVisualHelper.cs" />
+    <Compile Include="Assets\Scripts\Node\NodeSlot.cs" />
+    <Compile Include="Assets\Scripts\Node\NodeAnimationManager.cs" />
+    <Compile Include="Assets\Scripts\InputHelper.cs" />
+    <Compile Include="Assets\Scripts\GridSystem.cs" />
+    <Compile Include="Assets\Scripts\Utils\Utils.cs" />
+    <Compile Include="Assets\Scripts\Node\NodeDrawer.cs" />
+    <Compile Include="Assets\Scripts\Node\Node.cs" />
+    <Compile Include="Assets\Scripts\Utils\MeshGenerator.cs" />
+    <Compile Include="Assets\Scripts\Line\Line.cs" />
+    <Compile Include="Assets\Scripts\Node\SwitchNode.cs" />
+    <Compile Include="Assets\Scripts\ScriptableObject\NodeSlotPalette.cs" />
+    <Compile Include="Assets\Scripts\StationNumber.cs" />
+    <Compile Include="Assets\Scripts\CustomSystem.cs" />
+    <Compile Include="Assets\Scripts\Line\LineController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Shader\Point.shader" />
