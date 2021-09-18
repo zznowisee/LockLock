@@ -16,21 +16,21 @@ public class Node : MonoBehaviour
     public Electron pfElectron;
 
     public List<LineInfo> lineInfos;
-
     public List<Electron> electrons;
 
-    public bool hasCheckedElectron = false;
+    Transform electronParent;
 
     public NodeType NodeType { get { return nodeInfo.nodeType; } }
     public Vector2Int GlobalIndex { get { return nodeInfo.nodeIndex; } }
     public Line DrawingLine { get { return nodeInfo.drawingLine; } }
     public NodeSlot NodeSlot { get { return nodeInfo.nodeSlot; } }
+
     protected NodeAnimationManager nodeAnimationManager;
 
     private void Awake()
     {
         customSystem = FindObjectOfType<CustomSystem>();
-
+        electronParent = customSystem.transform.Find("electronParent");
         beSelectGraphic = transform.Find("sprite").Find("beSelectGraphic");
         nodeInfo.nodeType = NodeType.Normal;
     }
@@ -47,7 +47,7 @@ public class Node : MonoBehaviour
 
     #region Draw Line
     public void BeSelect() => beSelectGraphic.gameObject.SetActive(true);
-    public void CancelSelect() => beSelectGraphic.gameObject.SetActive(false);
+    public void CancelSelecting() => beSelectGraphic.gameObject.SetActive(false);
 
     public virtual void DrawLine()
     {
@@ -68,7 +68,7 @@ public class Node : MonoBehaviour
         nodeInfo.drawingLine.FinishLine(nextNode);
         Connect(nextNode);
 
-        CancelSelect();
+        CancelSelecting();
         nodeInfo.drawingLine = null;
     }
 
@@ -222,7 +222,7 @@ public class Node : MonoBehaviour
     {
         for (int i = 0; i < targets.Count; i++)
         {
-            Electron electron = Instantiate(pfElectron, transform.position, Quaternion.identity);
+            Electron electron = Instantiate(pfElectron, transform.position, Quaternion.identity, electronParent);
 
             Line line = GetLineFromConnectingNodesWithNode(targets[i]);
             line.passingElectrons.Add(electron);

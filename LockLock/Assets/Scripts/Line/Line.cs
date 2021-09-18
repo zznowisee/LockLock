@@ -144,7 +144,7 @@ public class Line : MonoBehaviour
         lineVisual.Material.color = palette.beSelectCol;
     }
 
-    public virtual void CancelSelect()
+    public virtual void CancelSelecting()
     {
         lineVisual.Material.color = palette.defaultCol;
     }

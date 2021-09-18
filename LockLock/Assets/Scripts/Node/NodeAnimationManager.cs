@@ -5,7 +5,7 @@ using UnityEngine;
 public class NodeAnimationManager : MonoBehaviour
 {
     Animator anim;
-    NodeAnimationManager currentLineSelectingNode;
+    NodeAnimationManager startManager;
 
     private void Awake()
     {
@@ -27,34 +27,34 @@ public class NodeAnimationManager : MonoBehaviour
         Node endNode = InputHelper.GetNodeUnderPosition(position);
         if(endNode != null)
         {
-            NodeAnimationManager nodeAnimationManager = endNode.GetComponent<NodeAnimationManager>();
-            if(nodeAnimationManager != currentLineSelectingNode && nodeAnimationManager != this)
+            NodeAnimationManager endManager = endNode.GetComponent<NodeAnimationManager>();
+            if(endManager != startManager && endManager != this)
             {
-                if(currentLineSelectingNode != null)
+                if(startManager != null)
                 {
-                    currentLineSelectingNode.CancelSelectByLine();
+                    startManager.CancelSelectByLine();
                 }
-                nodeAnimationManager.BeSelectByLine();
-                currentLineSelectingNode = nodeAnimationManager;
+                endManager.BeSelectByLine();
+                startManager = endManager;
             }
             else
             {
-                if(nodeAnimationManager == this)
+                if(endManager == this)
                 {
-                    if (currentLineSelectingNode != null)
+                    if (startManager != null)
                     {
-                        currentLineSelectingNode.CancelSelectByLine();
-                        currentLineSelectingNode = null;
+                        startManager.CancelSelectByLine();
+                        startManager = null;
                     }
                 }
             }
         }
         else
         {
-            if (currentLineSelectingNode != null)
+            if (startManager != null)
             {
-                currentLineSelectingNode.CancelSelectByLine();
-                currentLineSelectingNode = null;
+                startManager.CancelSelectByLine();
+                startManager = null;
             }
         }
     }

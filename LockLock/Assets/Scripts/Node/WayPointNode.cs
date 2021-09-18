@@ -21,13 +21,11 @@ public class WayPointNode : Node
     public void RegisterNewLine(Line line)
     {
         lineInfos.Add(line.lineInfo);
-        beSelectGraphic.gameObject.SetActive(true);
     }
 
     public void UnregisterLine(Line line)
     {
         lineInfos.Remove(line.lineInfo);
-        beSelectGraphic.gameObject.SetActive(false);
     }
 
     public bool CanReceiveLine(Line line)

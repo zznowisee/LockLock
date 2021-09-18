@@ -4,21 +4,32 @@ using UnityEngine;
 
 public class ReactionManager : MonoBehaviour
 {
+    CustomSystem customSystem;
+
     public static ReactionManager Instance;
     public List<Node> activeNodes;
     public int desiredElectronNumbers = 0;
+
+    bool isStopping = true;
+
     private void Awake()
     {
         Instance = this;
+        customSystem = FindObjectOfType<CustomSystem>();
     }
 
     public void RunMachine()
     {
-        StartCoroutine(NodesReactions());
+        if (isStopping)
+        {
+            isStopping = false;
+            StartCoroutine(NodesReactions());
+        }
     }
 
     public void Stop()
     {
+        isStopping = true;
         StopAllCoroutines();
     }
 
@@ -32,8 +43,21 @@ public class ReactionManager : MonoBehaviour
         desiredElectronNumbers--;
         if (desiredElectronNumbers == 0)
         {
-            StartCoroutine(NodesReactions());
+            if(CustomSystem.activeElectrons.Count > 0)
+            {
+                if (!isStopping)
+                {
+                    StartCoroutine(NodesReactions());
+                    customSystem.CheckAfterOnceReaction(); 
+                }
+            }
         }
+    }
+
+    public void ResetReaction()
+    {
+        desiredElectronNumbers = 0;
+        isStopping = true;
     }
 
     IEnumerator NodesReactions()

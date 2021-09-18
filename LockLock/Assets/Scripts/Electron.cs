@@ -49,6 +49,7 @@ public class Electron : MonoBehaviour
             if(passingLine.lineInfo.lineState == LineState.SwitchLine)
             {
                 SwitchNode sw = passingLine.lineInfo.startNode.GetComponent<SwitchNode>();
+                FindObjectOfType<CustomSystem>().AddSwitchInfo(sw);
                 sw.Switch();
             }
         }
@@ -64,7 +65,6 @@ public class Electron : MonoBehaviour
         passingLine = passingLine_;
 
         target = passingLine.GetTargetFromStartNode(startNode);
-        print(target);
     }
 
     public void SetupInWayPoint(Node lastNode_, Node target_)

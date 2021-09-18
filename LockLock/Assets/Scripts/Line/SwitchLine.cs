@@ -72,7 +72,7 @@ public class SwitchLine : Line
               $"EndNode : '{ lineInfo.endNode.gameObject.name }'");
     }
 
-    public override void CancelSelect()
+    public override void CancelSelecting()
     {
         lineVisual.Material.color = switchLineState == SwitchLineState.BlueLine ? palette.dottedUsingCol : palette.dottedWaitingCol;
     }

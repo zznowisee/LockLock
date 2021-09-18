@@ -10,13 +10,15 @@ public class SwitchNode : Node
 
     SwitchLine redLine;
     SwitchLine blueLine;
+
     [SerializeField] SwitchLine pfSwitchLine;
+
     public SwitchLine BlueLine { get { return blueLine; } }
     public SwitchLine RedLine { get { return redLine; } }
 
     bool hasDrawRedBlue = false;
 
-    private void Awake()
+    void Awake()
     {
         switchWarning = transform.Find("sprite").Find("switchWarning");
         beSelectGraphic = transform.Find("sprite").Find("beSelectGraphic");
@@ -109,7 +111,7 @@ public class SwitchNode : Node
         nodeInfo.drawingLine.FinishLine(nextNode);
         Connect(nextNode);
 
-        CancelSelect();
+        CancelSelecting();
         nodeInfo.drawingLine = null;
 
         CheckSwitchWarning();

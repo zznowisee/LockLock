@@ -41,7 +41,7 @@ public class CustomSystem : MonoBehaviour
 
     NodeSlot currentNodeSlot = null;
     Node currentNode = null;
-    Line selectLine = null;
+    Line currentLine = null;
 
     WayPointNode currentWayPoint = null;
     WayPointNode preWayPoint = null;
@@ -67,6 +67,14 @@ public class CustomSystem : MonoBehaviour
         activeElectrons = new List<Electron>();
     }
 
+    public void CheckAfterOnceReaction()
+    {
+        if(activeElectrons.Count == 0)
+        {
+            gameState = GameState.Edit;
+        }
+    }
+
     public void AddSwitchInfo(SwitchNode targetNode)
     {
         bool hasNode = false;
@@ -86,38 +94,66 @@ public class CustomSystem : MonoBehaviour
         }
     }
 
+    void Update()
+    {
+        if(gameState == GameState.Edit)
+        {
+            GetSelect();
+            switch (inputState)
+            {
+                case InputState.NodeSelect:
+                    StartDrawingLine();
+                    SpawnNewElectron();
+                    DeleteElectron();
+                    DeleteNode();
+                    SwitchNodeState();
+                    break;
+                case InputState.LineSelect:
+                    ChangeLineDirection();
+                    DeleteLine();
+                    break;
+                case InputState.DrawLine:
+                    DrawLine();
+                    break;
+                case InputState.NodeSlotSelect:
+                    SpawnNode();
+                    break;
+            }
+        }
+
+        hasDeletedSth = false;
+    }
+
     #region Buttons
 
-    public void Run()
+    public void StartBtn()
     {
-        Time.timeScale = 1;
-    }
+        if (gameState == GameState.Play)
+        {
+            return;
+        }
 
-    public void PauseGame()
-    {
-        Time.timeScale = 0;
-    }
-
-    public void StartGame()
-    {
-        if(gameState == GameState.Play)
+        if (activeElectrons.Count == 0)
         {
             return;
         }
 
         gameState = GameState.Play;
+
         ReactionManager.Instance.RunMachine();
     }
 
-    public void StopGame()
+    public void StopBtn()
     {
-        if(gameState == GameState.Edit)
+        if (gameState == GameState.Edit)
         {
             return;
         }
+
         ReactionManager.Instance.Stop();
 
         gameState = GameState.Edit;
+
         for (int i = 0; i < switchInfos.Count; i++)
         {
             if (switchInfos[i].passTimes % 2 == 0)
@@ -125,13 +161,12 @@ public class CustomSystem : MonoBehaviour
                 continue;
             }
 
-            var temp = new SwitchInfo() { passTimes = 0, switchNode = switchInfos[i].switchNode };
             switchInfos[i].switchNode.Switch();
-            switchInfos[i] = temp;
+            switchInfos[i].passTimes = 0;
         }
     }
 
-    public void Clear()
+    public void ClearBtn()
     {
         for (int i = 0; i < nodeParent.childCount; i++)
         {
@@ -156,12 +191,13 @@ public class CustomSystem : MonoBehaviour
             Destroy(activeElectrons[i].gameObject);
         }
 
+        ReactionManager.Instance.ResetReaction();
         gameState = GameState.Edit;
     }
 
-    public void Restart()
+    public void ResetBtn()
     {
-        foreach(NodeSlot slot in disableNodeSlots)
+        foreach (NodeSlot slot in disableNodeSlots)
         {
             Node node = slot.Node;
             for (int i = node.lineInfos.Count - 1; i >= 0; i--)
@@ -169,20 +205,75 @@ public class CustomSystem : MonoBehaviour
                 Line line = node.lineInfos[i].line;
                 line.DeleteLine();
             }
-
-            if(node.NodeType == NodeType.Switch)
-            {
-                Node normalNode = Instantiate(pfNode, node.transform.position, Quaternion.identity, nodeParent).GetComponent<Node>();
-                slot.SetNode(normalNode);
-                normalNode.Setup(slot.GlobalIndex, slot);
-                Destroy(node.gameObject);
-            }
         }
+
+        for (int i = 0; i < activeElectrons.Count; i++)
+        {
+            Destroy(activeElectrons[i].gameObject);
+        }
+
+        ReactionManager.Instance.ResetReaction();
 
         gameState = GameState.Edit;
     }
 
     #endregion
+
+    #region Node Selecting
+    void StartDrawingLine()
+    {
+        if (Input.GetMouseButton(0))
+        {
+            if (currentNode.NodeType == NodeType.WayPoint) return;
+            inputState = InputState.DrawLine;
+        }
+    }
+
+    void DeleteElectron()
+    {
+        if (Input.GetKeyDown(KeyCode.Delete))
+        {
+            if(currentNode.electrons.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < currentNode.electrons.Count; i++)
+            {
+                Destroy(currentNode.electrons[i].gameObject);
+            }
+
+            currentNode.electrons.Clear();
+            hasDeletedSth = true;
+        }
+    }
+
+    void DeleteNode()
+    {
+        if (Input.GetKeyDown(KeyCode.Delete))
+        {
+            if (hasDeletedSth) return;
+            currentNode.NodeSlot.gameObject.SetActive(true);
+            currentNode.NodeSlot.ClearNode();
+
+            for (int i = currentNode.lineInfos.Count - 1; i >= 0; i--)
+            {
+                Line line = currentNode.lineInfos[i].line;
+                line.DeleteLine();
+            }
+
+            Destroy(currentNode.gameObject);
+            hasDeletedSth = true;
+        }
+    }
+    void SpawnNewElectron()
+    {
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            Electron electron = Instantiate(pfElectron, currentNode.transform.position, Quaternion.identity, electronParent).GetComponent<Electron>();
+            currentNode.AddElectron(electron);
+        }
+    }
     void SwitchNodeState()
     {
         if (Input.GetKeyDown(KeyCode.Space))
@@ -221,111 +312,61 @@ public class CustomSystem : MonoBehaviour
         }
     }
 
-    void Update()
-    {
-        if(gameState == GameState.Edit)
-        {
-            switch (inputState)
-            {
-                case InputState.NullSelect:
-                    SelectNode();
-                    break;
-                case InputState.NodeSelect:
-                    SelectNode();
-                    SpawnNewElectron();
-                    DeleteNode();
-                    SwitchNodeState();
-                    break;
-                case InputState.LineSelect:
-                    SelectNode();
-                    ChangeLineDirection();
-                    DeleteLine();
-                    break;
-                case InputState.DrawLine:
-                    DrawLine();
-                    break;
-                case InputState.NodeSlotSelect:
-                    SelectNode();
-                    SpawnNode();
-                    break;
-            }
-        }
+    #endregion
 
-        hasDeletedSth = false;
-    }
-
-    void DeleteNode()
-    {
-        if (Input.GetKeyDown(KeyCode.Delete))
-        {
-            if (hasDeletedSth) return;
-            currentNode.NodeSlot.gameObject.SetActive(true);
-            currentNode.NodeSlot.ClearNode();
-
-            for (int i = currentNode.lineInfos.Count - 1; i >= 0; i--)
-            {
-                Line line = currentNode.lineInfos[i].line;
-                line.DeleteLine();
-            }
-
-            Destroy(currentNode.gameObject);
-            hasDeletedSth = true;
-        }
-    }
-    void SpawnNewElectron()
-    {
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            Electron electron = Instantiate(pfElectron, currentNode.transform.position, Quaternion.identity, electronParent).GetComponent<Electron>();
-            currentNode.AddElectron(electron);
-        }
-    }
-
+    #region NodeSlot Selecting
     void SpawnNode()
     {
-        if (Input.GetKeyDown(KeyCode.N))
+        if (currentNodeSlot.IsEmpty)
         {
-            if (currentNodeSlot.IsEmpty)
+            if (Input.GetKeyDown(KeyCode.N))
             {
                 Node node = Instantiate(pfNode, currentNodeSlot.transform.position, Quaternion.identity, nodeParent).GetComponent<Node>();
                 node.Setup(currentNodeSlot.GlobalIndex, currentNodeSlot);
                 currentNodeSlot.SetNode(node);
                 currentNodeSlot.gameObject.SetActive(false);
                 disableNodeSlots.Add(currentNodeSlot);
+                inputState = InputState.NullSelect;
+                currentNodeSlot.CancelSelecting();
+                currentNodeSlot = null;
                 return;
             }
-        }
 
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            if (currentNodeSlot.IsEmpty)
+            if (Input.GetKeyDown(KeyCode.S))
             {
                 SwitchNode switchNode = Instantiate(pfSwitchNode, currentNodeSlot.transform.position, Quaternion.identity, nodeParent).GetComponent<SwitchNode>();
                 switchNode.Setup(currentNodeSlot.GlobalIndex, currentNodeSlot);
                 currentNodeSlot.SetNode(switchNode);
                 currentNodeSlot.gameObject.SetActive(false);
                 disableNodeSlots.Add(currentNodeSlot);
+                inputState = InputState.NullSelect;
+                currentNodeSlot.CancelSelecting();
+                currentNodeSlot = null;
+                return;
             }
-        }
 
-        if (Input.GetKeyDown(KeyCode.W))
-        {
-            if (currentNodeSlot.IsEmpty)
+            if (Input.GetKeyDown(KeyCode.W))
             {
                 WayPointNode wayPointNode = Instantiate(pfWayPointNode, currentNodeSlot.transform.position, Quaternion.identity, nodeParent).GetComponent<WayPointNode>();
                 wayPointNode.Setup(currentNodeSlot.GlobalIndex, currentNodeSlot);
                 currentNodeSlot.SetNode(wayPointNode);
                 currentNodeSlot.gameObject.SetActive(false);
                 disableNodeSlots.Add(currentNodeSlot);
+                inputState = InputState.NullSelect;
+                currentNodeSlot.CancelSelecting();
+                currentNodeSlot = null;
+                return;
             }
         }
     }
+    #endregion
 
+    #region Line Selecting
     void ChangeLineDirection()
     {
         if (Input.GetKeyDown(KeyCode.D))
         {
-            selectLine.SetLineDirection();
+            currentLine.SetLineDirection();
         }
     }
 
@@ -333,14 +374,16 @@ public class CustomSystem : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Delete))
         {
-            if(selectLine != null)
+            if(currentLine != null)
             {
-                selectLine.DeleteLine();
-                selectLine = null;
+                currentLine.DeleteLine();
+                currentLine = null;
             }
         }
     }
+    #endregion
 
+    #region Drawing Line
     void DrawLine()
     {
         if (Input.GetMouseButton(0))
@@ -348,30 +391,33 @@ public class CustomSystem : MonoBehaviour
             currentNode.DrawLine();
 
             Vector2 position = currentNode.DrawingLine.GetComponent<LineVisual>().LastPointPosition;
-            GameObject wayPointObj = InputHelper.GetObjectUnderPosition(wayPointLayer, position);
-            if(wayPointObj != null)
+            GameObject nodeObj = InputHelper.GetObjectUnderPosition(nodeLayer, position);
+            if(nodeObj != null)
             {
-                WayPointNode wayPoint = wayPointObj.GetComponent<WayPointNode>();
-                currentWayPoint = wayPoint;
-                // if current way point is not last frame stored way point
-                if (currentWayPoint != preWayPoint)
+                if(nodeObj.GetComponent<Node>().NodeType == NodeType.WayPoint)
                 {
-                    // one more IF check current already in this way point
-                    if (wayPoint.CanReceiveLine(currentNode.DrawingLine))
+                    WayPointNode wayPoint = nodeObj.GetComponent<WayPointNode>();
+                    currentWayPoint = wayPoint;
+                    // if current way point is not last frame stored way point
+                    if (currentWayPoint != preWayPoint)
                     {
-                        print("can receive");
-                        wayPoint.RegisterNewLine(currentNode.DrawingLine);
-                        currentNode.DrawingLine.ConnectWayPoint(wayPoint);
-                    }
-                    else
-                    {
-                        print("Separate WayPoint");
-                        wayPoint.UnregisterLine(currentNode.DrawingLine);
-                        currentNode.DrawingLine.SeparateWayPoint(wayPoint);
-                    }
+                        // one more IF check current already in this way point
+                        if (wayPoint.CanReceiveLine(currentNode.DrawingLine))
+                        {
+                            print("can receive");
+                            wayPoint.RegisterNewLine(currentNode.DrawingLine);
+                            currentNode.DrawingLine.ConnectWayPoint(wayPoint);
+                        }
+                        else
+                        {
+                            print("Separate WayPoint");
+                            wayPoint.UnregisterLine(currentNode.DrawingLine);
+                            currentNode.DrawingLine.SeparateWayPoint(wayPoint);
+                        }
 
-                    preWayPoint = currentWayPoint;
-                    currentWayPoint = null;
+                        preWayPoint = currentWayPoint;
+                        currentWayPoint = null;
+                    }
                 }
             }
             else
@@ -388,19 +434,17 @@ public class CustomSystem : MonoBehaviour
             if (nodeObj)
             {
                 Node node = nodeObj.GetComponent<Node>();
-                if (currentNode.IsConnectValid(node))
+                if (currentNode.IsConnectValid(node) && node.NodeType != NodeType.WayPoint)
                 {
                     currentNode.FinishDraw(node);
-                    currentNode = node;
-                    currentNode.BeSelect();
-                    inputState = InputState.NodeSelect;
-                }
-                else
-                {
-                    currentNode.DeleteLine();
-                    inputState = InputState.NodeSelect;
+
+                    CancelAllSelect();
+
+                    inputState = InputState.NullSelect;
                     return;
                 }
+                currentNode.DeleteLine();
+                inputState = InputState.NodeSelect;
             }
             else
             {
@@ -409,8 +453,10 @@ public class CustomSystem : MonoBehaviour
             }
         }
     }
+    #endregion
 
-    void SelectNode()
+    #region Selecting
+    void GetSelect()
     {
         if (Input.GetMouseButtonDown(0))
         {
@@ -420,85 +466,62 @@ public class CustomSystem : MonoBehaviour
 
             if (nodeSlotObj)
             {
+                CancelAllSelect();
+
                 NodeSlot nodeSlot = nodeSlotObj.GetComponent<NodeSlot>();
-                if (currentNodeSlot != null)
-                {
-                    currentNodeSlot.CancelSelecting();
-                }
                 nodeSlot.BeSelecting();
                 currentNodeSlot = nodeSlot;
                 inputState = InputState.NodeSlotSelect;
                 return;
             }
-            else
-            {
-                if (currentNodeSlot != null)
-                {
-                    currentNodeSlot.CancelSelecting();
-                }
-                currentNodeSlot = null;
-                inputState = InputState.NullSelect;
-            }
 
             if (nodeObj)
             {
+                CancelAllSelect();
                 Node node = nodeObj.GetComponent<Node>();
-                if (currentNode != null)
-                {
-                    currentNode.CancelSelect();
-                }
                 node.BeSelect();
                 currentNode = node;
                 inputState = InputState.NodeSelect;
-
-                if (selectLine)
-                {
-                    selectLine.CancelSelect();
-                }
-                
                 return;
-            }
-            else
-            {
-                if (currentNode != null)
-                {
-                    currentNode.CancelSelect();
-                }
-                currentNode = null;
-                inputState = InputState.NullSelect;
             }
 
             if (lineObj)
             {
+                CancelAllSelect();
                 Line line = lineObj.GetComponent<Line>();
-                if (selectLine != null)
-                {
-                    selectLine.CancelSelect();
-                }
                 line.BeSelect();
-                selectLine = line;
+                currentLine = line;
                 inputState = InputState.LineSelect;
+                return;
             }
-            else
-            {
-                if (selectLine != null)
-                {
-                    selectLine.CancelSelect();
-                }
-                selectLine = null;
-                inputState = InputState.NullSelect;
-            }
-        }
 
-        if (Input.GetMouseButton(0))
-        {
-            if (currentNode != null)
-            {
-                inputState = InputState.DrawLine;
-            }
+            CancelAllSelect();
+            inputState = InputState.NullSelect;
         }
     }
 
+    void CancelAllSelect()
+    {
+        if (currentNode)
+        {
+            currentNode.CancelSelecting();
+        }
+
+        if (currentNodeSlot)
+        {
+            currentNodeSlot.CancelSelecting();
+        }
+
+        if (currentLine)
+        {
+            currentLine.CancelSelecting();
+        }
+
+        currentNodeSlot = null;
+        currentNode = null;
+        currentLine = null;
+    }
+    #endregion
     public class SwitchInfo
     {
         public int passTimes;

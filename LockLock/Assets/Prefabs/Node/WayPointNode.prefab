@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1095398296658486942}
   - component: {fileID: 907817053887079151}
   - component: {fileID: 4419137049601384282}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: middle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -51,10 +51,12 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -79,6 +81,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &2794103284385990300
 GameObject:
   m_ObjectHideFlags: 0
@@ -90,7 +93,7 @@ GameObject:
   - component: {fileID: 5285052241410105433}
   - component: {fileID: 6660213657659803034}
   - component: {fileID: 3107585671920857127}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -130,10 +133,12 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -158,6 +163,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &5462143386468021048
 GameObject:
   m_ObjectHideFlags: 0
@@ -169,7 +175,7 @@ GameObject:
   - component: {fileID: 5941385794907064471}
   - component: {fileID: 2199793078135391890}
   - component: {fileID: 6635294918090041668}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: lineController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -201,10 +207,12 @@ LineRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 0
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -310,7 +318,7 @@ GameObject:
   - component: {fileID: 2444603913683414680}
   - component: {fileID: 1131635672970759283}
   - component: {fileID: 1278479934767630730}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: circle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -350,10 +358,12 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -378,6 +388,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &7109211236524098187
 GameObject:
   m_ObjectHideFlags: 0
@@ -389,7 +400,7 @@ GameObject:
   - component: {fileID: 7109211236524098188}
   - component: {fileID: 443868874992512327}
   - component: {fileID: -7430622737308814203}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: WayPointNode
   m_TagString: Node
   m_Icon: {fileID: 0}
@@ -442,14 +453,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   nodeInfo:
     nodeIndex: {x: 0, y: 0}
-    nodeState: 0
+    nodeType: 0
     nodeSlot: {fileID: 0}
     drawingLine: {fileID: 0}
-    station: {fileID: 0}
-    train: {fileID: 0}
   radius: 4
   pfLine: {fileID: 0}
+  pfElectron: {fileID: 0}
   lineInfos: []
+  electrons: []
 --- !u!1 &7109211237590637150
 GameObject:
   m_ObjectHideFlags: 0
@@ -459,7 +470,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7109211237590637151}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -492,7 +503,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8317974076963684509}
-  m_Layer: 11
+  m_Layer: 8
   m_Name: beSelectGraphic
   m_TagString: Untagged
   m_Icon: {fileID: 0}
