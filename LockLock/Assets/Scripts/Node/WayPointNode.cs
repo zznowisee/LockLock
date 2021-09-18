@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WayPointNode : Node
+public class WayPointNode : NormalNode
 {
     private void Awake()
     {
@@ -49,7 +49,7 @@ public class WayPointNode : Node
             {
                 ReactionManager.Instance.RegisterElectron();
                 Electron electron = electrons[i];
-                Node target = electron.passingLine.lineInfo.GetTargetNode(this, electron.startNode);
+                NormalNode target = electron.passingLine.lineInfo.GetTargetNode(this, electron.startNode);
                 electron.SetupInWayPoint(this ,target);
             }
         }

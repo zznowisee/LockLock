@@ -24,7 +24,7 @@ public class NodeAnimationManager : MonoBehaviour
 
     public void CheckLineEndPosition(Vector2 position)
     {
-        Node endNode = InputHelper.GetNodeUnderPosition(position);
+        NormalNode endNode = InputHelper.GetNodeUnderPosition(position);
         if(endNode != null)
         {
             NodeAnimationManager endManager = endNode.GetComponent<NodeAnimationManager>();

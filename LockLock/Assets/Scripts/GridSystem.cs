@@ -36,7 +36,7 @@ public class GridSystem : MonoBehaviour
         }
     }
 
-    public Node GetNodeFromGlobalIndex(Vector2Int index)
+    public NormalNode GetNodeFromGlobalIndex(Vector2Int index)
     {
         if (index.x < 0 || index.x > width - 1 || index.y < 0 || index.y > height - 1) return null;
 

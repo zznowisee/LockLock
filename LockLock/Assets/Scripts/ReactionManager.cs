@@ -7,10 +7,11 @@ public class ReactionManager : MonoBehaviour
     CustomSystem customSystem;
 
     public static ReactionManager Instance;
-    public List<Node> activeNodes;
+    public List<NormalNode> activeNodes;
+    public List<Electron> activeElectrons;
     public int desiredElectronNumbers = 0;
 
-    bool isStopping = true;
+    bool isRunning = true;
 
     private void Awake()
     {
@@ -18,18 +19,32 @@ public class ReactionManager : MonoBehaviour
         customSystem = FindObjectOfType<CustomSystem>();
     }
 
-    public void RunMachine()
+    public void SwitchGameModeToRun()
     {
-        if (isStopping)
-        {
-            isStopping = false;
-            StartCoroutine(NodesReactions());
-        }
+        isRunning = true;
+        RunMachine();
     }
 
-    public void Stop()
+    public void SwitchGameModeToPause()
     {
-        isStopping = true;
+        isRunning = false;
+        StopMachine();
+    }
+
+    public void SwitchGameModeToEdit()
+    {
+        isRunning = false;
+        StopMachine();
+        ResetReaction();
+    }
+
+    public void RunMachine()
+    {
+        StartCoroutine(NodesReactions());
+    }
+
+    public void StopMachine()
+    {
         StopAllCoroutines();
     }
 
@@ -41,23 +56,25 @@ public class ReactionManager : MonoBehaviour
     public void Check()
     {
         desiredElectronNumbers--;
-        if (desiredElectronNumbers == 0)
+        if (customSystem.HasElectronsLeft)
         {
-            if(CustomSystem.activeElectrons.Count > 0)
+            if (desiredElectronNumbers == 0)
             {
-                if (!isStopping)
+                if (isRunning)
                 {
                     StartCoroutine(NodesReactions());
-                    customSystem.CheckAfterOnceReaction(); 
+                }
+                else
+                {
+                    ResetReaction();
                 }
             }
         }
     }
 
-    public void ResetReaction()
+    void ResetReaction()
     {
         desiredElectronNumbers = 0;
-        isStopping = true;
     }
 
     IEnumerator NodesReactions()
@@ -69,13 +86,21 @@ public class ReactionManager : MonoBehaviour
 
         yield return new WaitForEndOfFrame();
 
-        for (int i = 0; i < activeNodes.Count; i++)
+        if (!customSystem.HasElectronsLeft)
         {
-            for (int j = 0; j < activeNodes[i].electrons.Count; j++)
+            customSystem.NoElectronsLeft();
+            ResetReaction();
+        }
+        else
+        {
+            for (int i = 0; i < activeNodes.Count; i++)
             {
-                activeNodes[i].electrons[j].MoveTo();
+                for (int j = 0; j < activeNodes[i].electrons.Count; j++)
+                {
+                    activeNodes[i].electrons[j].MoveTo();
+                }
+                activeNodes[i].electrons.Clear();
             }
-            activeNodes[i].electrons.Clear();
         }
     }
 }

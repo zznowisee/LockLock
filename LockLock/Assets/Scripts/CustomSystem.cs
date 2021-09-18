@@ -5,19 +5,21 @@ using System;
 
 public class CustomSystem : MonoBehaviour
 {
+    UIManager uiManager;
+
     [Header("Layer")]
     [SerializeField] LayerMask nodeLayer;
     [SerializeField] LayerMask lineLayer;
     [SerializeField] LayerMask nodeSlotLayer;
-    [SerializeField] LayerMask wayPointLayer;
     [Header("Prefab")]
     [SerializeField] Transform pfNode;
     [SerializeField] Transform pfElectron;
     [SerializeField] Transform pfSwitchNode;
     [SerializeField] Transform pfWayPointNode;
 
-    public List<SwitchInfo> switchInfos;
-    public List<NodeSlot> disableNodeSlots;
+    List<SwitchInfo> switchInfos;
+    List<NodeSlot> disableNodeSlots;
+    public List<ElectronInfo> electronInfos;
 
     bool hasDeletedSth = false;
 
@@ -33,14 +35,15 @@ public class CustomSystem : MonoBehaviour
     public enum GameState
     {
         Edit,
-        Play
+        Running,
+        Pause
     }
 
     public GameState gameState = GameState.Edit;
     public InputState inputState = InputState.NullSelect;
 
     NodeSlot currentNodeSlot = null;
-    Node currentNode = null;
+    NormalNode currentNode = null;
     Line currentLine = null;
 
     WayPointNode currentWayPoint = null;
@@ -49,12 +52,16 @@ public class CustomSystem : MonoBehaviour
     private Transform nodeParent;
     private Transform electronParent;
 
-    public static List<Electron> activeElectrons;
-
+    List<Electron> activeElectrons;
+    List<NormalNode> activeNodes;
     [HideInInspector] public Transform lineParent;
+
+    public bool HasElectronsLeft { get { return activeElectrons.Count != 0; } }
     
     private void Awake()
     {
+
+        uiManager = FindObjectOfType<UIManager>();
         nodeParent = transform.Find("nodeParent");
         electronParent = transform.Find("electronParent");
         lineParent = transform.Find("lineParent");
@@ -65,13 +72,26 @@ public class CustomSystem : MonoBehaviour
         switchInfos = new List<SwitchInfo>();
         disableNodeSlots = new List<NodeSlot>();
         activeElectrons = new List<Electron>();
+        electronInfos = new List<ElectronInfo>();
+
+        activeNodes = ReactionManager.Instance.activeNodes;
+        activeElectrons = ReactionManager.Instance.activeElectrons;
     }
 
-    public void CheckAfterOnceReaction()
+    public void NoElectronsLeft()
     {
-        if(activeElectrons.Count == 0)
+        gameState = GameState.Edit;
+        uiManager.SwitchGameModeToEdit();
+
+        for (int i = 0; i < switchInfos.Count; i++)
         {
-            gameState = GameState.Edit;
+            if (switchInfos[i].passTimes % 2 == 0)
+            {
+                continue;
+            }
+
+            switchInfos[i].switchNode.Switch();
+            switchInfos[i].passTimes = 0;
         }
     }
 
@@ -126,48 +146,82 @@ public class CustomSystem : MonoBehaviour
 
     #region Buttons
 
-    public void StartBtn()
+    public void RunPauseBtn()
     {
-        if (gameState == GameState.Play)
+        switch (gameState)
         {
-            return;
+            case GameState.Edit:
+                gameState = GameState.Running;
+                uiManager.SwitchGameModeToRun();
+                ReactionManager.Instance.SwitchGameModeToRun();
+                electronInfos.Clear();
+                for (int i = 0; i < activeNodes.Count; i++)
+                {
+                    NormalNode node = activeNodes[i];
+                    if(ReactionManager.Instance.activeNodes[i].electrons.Count != 0)
+                    {
+                        electronInfos.Add(new ElectronInfo() { node_ = node });
+                    }
+                }
+                break;
+            case GameState.Running:
+                gameState = GameState.Pause;
+                uiManager.SwitchGameModeToPause();
+
+                ReactionManager.Instance.SwitchGameModeToPause();
+                break;
+            case GameState.Pause:
+                gameState = GameState.Running;
+                uiManager.SwitchGameModeToRun();
+
+                ReactionManager.Instance.SwitchGameModeToRun();
+                break;
         }
-
-        if (activeElectrons.Count == 0)
-        {
-            return;
-        }
-
-        gameState = GameState.Play;
-
-        ReactionManager.Instance.RunMachine();
     }
 
     public void StopBtn()
     {
-        if (gameState == GameState.Edit)
-        {
-            return;
-        }
-
-        ReactionManager.Instance.Stop();
-
+        ReactionManager.Instance.SwitchGameModeToEdit();
+        uiManager.SwitchGameModeToEdit();
         gameState = GameState.Edit;
 
         for (int i = 0; i < switchInfos.Count; i++)
         {
-            if (switchInfos[i].passTimes % 2 == 0)
-            {
-                continue;
-            }
-
+            if (switchInfos[i].passTimes % 2 == 0) continue;
             switchInfos[i].switchNode.Switch();
             switchInfos[i].passTimes = 0;
         }
+
+        for (int i = activeElectrons.Count - 1; i >= 0; i--)
+        {
+            Destroy(activeElectrons[i].gameObject);
+        }
+
+        activeElectrons.Clear();
+
+        for (int i = 0; i < activeNodes.Count; i++)
+        {
+            activeNodes[i].electrons.Clear();
+        }
+
+        for (int i = 0; i < lineParent.childCount; i++)
+        {
+            lineParent.GetChild(i).GetComponent<Line>().ResetToInit();
+        }
+
+        for (int i = 0; i < electronInfos.Count; i++)
+        {
+            Electron e = Instantiate(pfElectron, electronInfos[i].node_.transform.position, Quaternion.identity, electronParent).GetComponent<Electron>();
+            electronInfos[i].node_.AddElectron(e);
+        }
     }
 
-    public void ClearBtn()
+    public void ClearAllBtn()
     {
+        ReactionManager.Instance.SwitchGameModeToEdit();
+        uiManager.SwitchGameModeToEdit();
+        gameState = GameState.Edit;
+
         for (int i = 0; i < nodeParent.childCount; i++)
         {
             Destroy(nodeParent.GetChild(i).gameObject);
@@ -186,35 +240,30 @@ public class CustomSystem : MonoBehaviour
             Destroy(lineParent.GetChild(i).gameObject);
         }
 
-        for (int i = 0; i < activeElectrons.Count; i++)
+        for (int i = activeElectrons.Count - 1; i >= 0; i--)
         {
             Destroy(activeElectrons[i].gameObject);
         }
-
-        ReactionManager.Instance.ResetReaction();
-        gameState = GameState.Edit;
     }
 
-    public void ResetBtn()
+    public void ClearLineBtn()
     {
-        foreach (NodeSlot slot in disableNodeSlots)
+        ReactionManager.Instance.SwitchGameModeToEdit();
+        uiManager.SwitchGameModeToEdit();
+        gameState = GameState.Edit;
+
+        for (int i = 0; i < lineParent.childCount; i++)
         {
-            Node node = slot.Node;
-            for (int i = node.lineInfos.Count - 1; i >= 0; i--)
-            {
-                Line line = node.lineInfos[i].line;
-                line.DeleteLine();
-            }
+            Line line = lineParent.GetChild(i).GetComponent<Line>();
+            line.DeleteLine();
         }
 
-        for (int i = 0; i < activeElectrons.Count; i++)
+        for (int i = activeElectrons.Count - 1; i >= 0; i--)
         {
             Destroy(activeElectrons[i].gameObject);
         }
 
-        ReactionManager.Instance.ResetReaction();
-
-        gameState = GameState.Edit;
+        electronInfos.Clear();
     }
 
     #endregion
@@ -300,7 +349,7 @@ public class CustomSystem : MonoBehaviour
                     break;
                 case NodeType.Switch:
                     // setup new node
-                    Node normalNode = Instantiate(pfNode, currentNode.transform.position, Quaternion.identity, nodeParent).GetComponent<Node>();
+                    NormalNode normalNode = Instantiate(pfNode, currentNode.transform.position, Quaternion.identity, nodeParent).GetComponent<NormalNode>();
                     nodeSlot.SetNode(normalNode);
                     normalNode.Setup(nodeSlot.GlobalIndex, nodeSlot);
                     normalNode.BeSelect();
@@ -321,7 +370,7 @@ public class CustomSystem : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.N))
             {
-                Node node = Instantiate(pfNode, currentNodeSlot.transform.position, Quaternion.identity, nodeParent).GetComponent<Node>();
+                NormalNode node = Instantiate(pfNode, currentNodeSlot.transform.position, Quaternion.identity, nodeParent).GetComponent<NormalNode>();
                 node.Setup(currentNodeSlot.GlobalIndex, currentNodeSlot);
                 currentNodeSlot.SetNode(node);
                 currentNodeSlot.gameObject.SetActive(false);
@@ -394,7 +443,7 @@ public class CustomSystem : MonoBehaviour
             GameObject nodeObj = InputHelper.GetObjectUnderPosition(nodeLayer, position);
             if(nodeObj != null)
             {
-                if(nodeObj.GetComponent<Node>().NodeType == NodeType.WayPoint)
+                if(nodeObj.GetComponent<NormalNode>().NodeType == NodeType.WayPoint)
                 {
                     WayPointNode wayPoint = nodeObj.GetComponent<WayPointNode>();
                     currentWayPoint = wayPoint;
@@ -433,7 +482,7 @@ public class CustomSystem : MonoBehaviour
             GameObject nodeObj = InputHelper.GetObjectUnderPosition(nodeLayer, position);
             if (nodeObj)
             {
-                Node node = nodeObj.GetComponent<Node>();
+                NormalNode node = nodeObj.GetComponent<NormalNode>();
                 if (currentNode.IsConnectValid(node) && node.NodeType != NodeType.WayPoint)
                 {
                     currentNode.FinishDraw(node);
@@ -478,7 +527,7 @@ public class CustomSystem : MonoBehaviour
             if (nodeObj)
             {
                 CancelAllSelect();
-                Node node = nodeObj.GetComponent<Node>();
+                NormalNode node = nodeObj.GetComponent<NormalNode>();
                 node.BeSelect();
                 currentNode = node;
                 inputState = InputState.NodeSelect;
@@ -526,5 +575,11 @@ public class CustomSystem : MonoBehaviour
     {
         public int passTimes;
         public SwitchNode switchNode;
+    }
+
+    [Serializable]
+    public class ElectronInfo
+    {
+        public NormalNode node_;
     }
 }

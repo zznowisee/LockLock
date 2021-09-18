@@ -2,14 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum ElectronType { MinusOne, PlusOne }
+
 public class Electron : MonoBehaviour
 {
     [SerializeField] float duration = 1f;
     [SerializeField] float easeAmount;
 
-    Node target;
-    public Node startNode;
-    public Node lastNode;
+    ElectronType type;
+
+    NormalNode target;
+    public NormalNode startNode;
+    public NormalNode lastNode;
     public Line passingLine;
 
     public int level = 0;
@@ -19,7 +23,7 @@ public class Electron : MonoBehaviour
     {
         float percent = 0f;
         Vector3 startPosition = lastNode == null ? startNode.transform.position : lastNode.transform.position;
-        Vector2 endPosition = canMeet ? startPosition : target.transform.position;
+        Vector2 endPosition = passingLine.CanMeet ? startPosition : target.transform.position;
         Vector3 middlePosition = (target.transform.position + startPosition) / 2f;
 
         while (percent < 1f)
@@ -42,7 +46,7 @@ public class Electron : MonoBehaviour
             yield return null;
         }
 
-        if (canMeet) print($"Change target by { target.gameObject.name } to {startNode.gameObject.name}");
+        if (passingLine.CanMeet) print($"Change target by { target.gameObject.name } to {startNode.gameObject.name}");
 
         if (target.NodeType != NodeType.WayPoint)
         {
@@ -58,7 +62,7 @@ public class Electron : MonoBehaviour
         ReactionManager.Instance.Check();
     }
 
-    public void SetupInfo(Node startNode_, int level_, Line passingLine_)
+    public void SetupInfo(NormalNode startNode_, int level_, Line passingLine_)
     {
         startNode = startNode_;
         level = level_;
@@ -67,7 +71,7 @@ public class Electron : MonoBehaviour
         target = passingLine.GetTargetFromStartNode(startNode);
     }
 
-    public void SetupInWayPoint(Node lastNode_, Node target_)
+    public void SetupInWayPoint(NormalNode lastNode_, NormalNode target_)
     {
         lastNode = lastNode_;
         target = target_;
@@ -79,7 +83,7 @@ public class Electron : MonoBehaviour
         canMeet = passingLine.CanMeet;
     }
 
-    void OnEnable() => CustomSystem.activeElectrons.Add(this);
-    void OnDisable() => CustomSystem.activeElectrons.Remove(this);
+    void OnEnable() => ReactionManager.Instance.activeElectrons.Add(this);
+    void OnDisable() => ReactionManager.Instance.activeElectrons.Remove(this);
 }
 

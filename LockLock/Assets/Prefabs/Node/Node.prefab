@@ -323,7 +323,7 @@ GameObject:
   - component: {fileID: 3269300424910999924}
   - component: {fileID: 1221366164}
   - component: {fileID: -4954044497459340032}
-  - component: {fileID: 7707668858432537668}
+  - component: {fileID: 4509229327202450683}
   m_Layer: 8
   m_Name: Node
   m_TagString: Node
@@ -393,7 +393,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53e4448acba8c6649b5a11963580bf4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &7707668858432537668
+--- !u!114 &4509229327202450683
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -402,7 +402,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5322954584088477368}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: abfbaf7413296254d812c8fc067b98ba, type: 3}
+  m_Script: {fileID: 11500000, guid: e8422c0506cf9534197dad6edbaad6f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   nodeInfo:
@@ -410,13 +410,12 @@ MonoBehaviour:
     nodeType: 0
     nodeSlot: {fileID: 0}
     drawingLine: {fileID: 0}
-  radius: 4
-  pfLine: {fileID: 6244738375023981668, guid: 750dcf6fc2ecd4f43a12f353ae647556, type: 3}
   pfElectron: {fileID: 7652281212934624313, guid: 8766709f1baf299498df2aa027500e48,
     type: 3}
   lineInfos: []
   electrons: []
-  hasCheckedElectron: 0
+  radius: 4
+  pfLine: {fileID: 6244738375023981668, guid: 750dcf6fc2ecd4f43a12f353ae647556, type: 3}
 --- !u!1 &5359875528390555243
 GameObject:
   m_ObjectHideFlags: 0

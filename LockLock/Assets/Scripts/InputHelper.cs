@@ -86,19 +86,19 @@ public static class InputHelper
         return false;
     }
 
-    public static Node GetNodeUnderPosition(Vector2 position)
+    public static NormalNode GetNodeUnderPosition(Vector2 position)
     {
         RaycastHit2D hit = Physics2D.Raycast(position, Vector3.forward, float.MaxValue);
         if (hit.collider)
         {
-            Node node = hit.collider.gameObject.GetComponent<Node>();
+            NormalNode node = hit.collider.gameObject.GetComponent<NormalNode>();
             return node;
         }
 
         return null;
     }
 
-    public static Vector3 CalculateEndPosition(Vector2 mousePos, Node startNode)
+    public static Vector3 CalculateEndPosition(Vector2 mousePos, NormalNode startNode)
     {
         Vector2 dir = (mousePos - (Vector2)startNode.transform.position).normalized;
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
@@ -137,7 +137,7 @@ public static class InputHelper
         if (angle >= 210f && angle < 270f) offset = new Vector2Int(-1, 1);
         if (angle >= 270f && angle < 330f) offset = new Vector2Int(0, 1);
 
-        Node node = GridSystem.Instance.GetNodeFromGlobalIndex(startNode.GlobalIndex + offset);
+        NormalNode node = GridSystem.Instance.GetNodeFromGlobalIndex(startNode.GlobalIndex + offset);
         return node == null ? startNode.transform.position : dist > 6f ? node.transform.position : unclampedEndPosition;
     }
 }
