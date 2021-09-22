@@ -2,19 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WayPointNode : NormalNode
+public class WayPointNode : Node
 {
-    private void Awake()
-    {
-        beSelectGraphic = transform.Find("sprite").Find("beSelectGraphic");
-
-        nodeInfo.nodeType = NodeType.WayPoint;
-    }
 
     public override void Setup(Vector2Int nodeIndex, NodeSlot nodeSlot)
     {
         base.Setup(nodeIndex, nodeSlot);
-
+        nodeInfo.nodeType = NodeType.WayPoint;
         gameObject.name = "WayPointNode_" + nodeIndex.x + "_" + nodeIndex.y;
     }
 
@@ -43,13 +37,13 @@ public class WayPointNode : NormalNode
 
     public override void Reaction()
     {
-        if(electrons.Count != 0f)
+        if(waitingElectrons.Count != 0f)
         {
-            for (int i = 0; i < electrons.Count; i++)
+            for (int i = 0; i < waitingElectrons.Count; i++)
             {
                 ReactionManager.Instance.RegisterElectron();
-                Electron electron = electrons[i];
-                NormalNode target = electron.passingLine.lineInfo.GetTargetNode(this, electron.startNode);
+                Electron electron = waitingElectrons[i];
+                Node target = electron.passingLine.lineInfo.GetTargetNode(this, electron.startNode);
                 electron.SetupInWayPoint(this ,target);
             }
         }

@@ -2,22 +2,59 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ElectronType { MinusOne, PlusOne }
+public enum ElectronType { MinusOne, PlusOne, Zero }
 
 public class Electron : MonoBehaviour
 {
     [SerializeField] float duration = 1f;
     [SerializeField] float easeAmount;
 
-    ElectronType type;
+    public ElectronType Type { get; private set; }
 
-    NormalNode target;
-    public NormalNode startNode;
-    public NormalNode lastNode;
+    Node target;
+    public Node startNode;
+    public Node lastNode;
     public Line passingLine;
 
     public int level = 0;
     public bool canMeet = false;
+
+    public Material minusOneMat;
+    public Material plusOneMat;
+
+    MeshRenderer meshRenderer;
+
+    public void SetupInfo(Node startNode_, int level_, Line passingLine_)
+    {
+        startNode = startNode_;
+        level = level_;
+        passingLine = passingLine_;
+        meshRenderer = transform.Find("sprite").Find("insideSprite").GetComponent<MeshRenderer>();
+        Type = ElectronType.PlusOne;
+        switch (Type)
+        {
+            case ElectronType.MinusOne:
+                meshRenderer.material = minusOneMat;
+                break;
+            case ElectronType.PlusOne:
+                meshRenderer.material = plusOneMat;
+                break;
+        }
+
+        target = passingLine.GetTargetFromStartNode(startNode);
+    }
+
+    public void SetupInWayPoint(Node lastNode_, Node target_)
+    {
+        lastNode = lastNode_;
+        target = target_;
+    }
+
+    public void MoveTo()
+    {
+        StartCoroutine(MoveToTarget());
+        canMeet = passingLine.CanMeet;
+    }
 
     IEnumerator MoveToTarget()
     {
@@ -60,27 +97,6 @@ public class Electron : MonoBehaviour
 
         target.RegisterNewElectron(this);
         ReactionManager.Instance.Check();
-    }
-
-    public void SetupInfo(NormalNode startNode_, int level_, Line passingLine_)
-    {
-        startNode = startNode_;
-        level = level_;
-        passingLine = passingLine_;
-
-        target = passingLine.GetTargetFromStartNode(startNode);
-    }
-
-    public void SetupInWayPoint(NormalNode lastNode_, NormalNode target_)
-    {
-        lastNode = lastNode_;
-        target = target_;
-    }
-
-    public void MoveTo()
-    {
-        StartCoroutine(MoveToTarget());
-        canMeet = passingLine.CanMeet;
     }
 
     void OnEnable() => ReactionManager.Instance.activeElectrons.Add(this);

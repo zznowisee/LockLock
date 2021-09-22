@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class NodeSlot : MonoBehaviour
 {
-    NormalNode node;
+    Node node;
     [SerializeField] Vector2Int globalIndex;
     [SerializeField] NodeSlotPalette palette;
 
@@ -17,7 +17,7 @@ public class NodeSlot : MonoBehaviour
             return globalIndex;
         }
     }
-    public NormalNode Node { get { return node; } }
+    public Node Node { get { return node; } }
     public bool IsEmpty { get { return node == null; } }
     public void Setup(Vector2Int globalIndex_)
     {
@@ -25,7 +25,7 @@ public class NodeSlot : MonoBehaviour
         globalIndex = globalIndex_;
     }
 
-    public void SetNode(NormalNode node_) => node = node_;
+    public void SetNode(Node node_) => node = node_;
     public void ClearNode() => node = null;
     public void BeSelecting() => spriteRenderer.color = palette.beSelectingCol;
     public void CancelSelecting() => spriteRenderer.color = palette.defaultCol;

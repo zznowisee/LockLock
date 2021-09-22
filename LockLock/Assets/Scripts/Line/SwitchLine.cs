@@ -7,8 +7,8 @@ public class SwitchLine : Line
 {
     SwitchLineState switchLineState;
 
-    public NormalNode switchStartNode;
-    public NormalNode switchEndNode;
+    public Node switchStartNode;
+    public Node switchEndNode;
     Transform switchVisualMark;
 
     [SerializeField] protected Transform pfMarkLine;
@@ -22,7 +22,7 @@ public class SwitchLine : Line
         lineVisual = GetComponent<LineVisual>();
     }
 
-    public void Setup(NormalNode startNode, LineState lineState, SwitchLineState switchLineState_)
+    public void Setup(Node startNode, LineState lineState, SwitchLineState switchLineState_)
     {
         hasBeenSetup = true;
 
@@ -52,7 +52,7 @@ public class SwitchLine : Line
         }
     }
 
-    public override void FinishLine(NormalNode endNode)
+    public override void FinishLine(Node endNode)
     {
         lineVisual.ConnectNode(endNode.transform.position - transform.position);
         dirEndNode = endNode;

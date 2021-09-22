@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class LineController : MonoBehaviour
 {
-    NormalNode node;
+    Node node;
 
     // if can control more than one line , use list instead of one single line
     Line line;
@@ -12,7 +12,7 @@ public class LineController : MonoBehaviour
 
     private void Awake()
     {
-        node = GetComponentInParent<NormalNode>();
+        node = GetComponentInParent<Node>();
         lineRenderer = GetComponent<LineRenderer>();
     }
 

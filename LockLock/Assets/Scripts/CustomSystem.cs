@@ -16,6 +16,7 @@ public class CustomSystem : MonoBehaviour
     [SerializeField] Transform pfElectron;
     [SerializeField] Transform pfSwitchNode;
     [SerializeField] Transform pfWayPointNode;
+    [SerializeField] Transform pfReceiver;
 
     List<SwitchInfo> switchInfos;
     List<NodeSlot> disableNodeSlots;
@@ -43,7 +44,7 @@ public class CustomSystem : MonoBehaviour
     public InputState inputState = InputState.NullSelect;
 
     NodeSlot currentNodeSlot = null;
-    NormalNode currentNode = null;
+    Node currentNode = null;
     Line currentLine = null;
 
     WayPointNode currentWayPoint = null;
@@ -53,13 +54,20 @@ public class CustomSystem : MonoBehaviour
     private Transform electronParent;
 
     List<Electron> activeElectrons;
-    List<NormalNode> activeNodes;
+    List<Node> activeNodes;
     [HideInInspector] public Transform lineParent;
+
+    public int[] receiverIndices;
 
     public bool HasElectronsLeft { get { return activeElectrons.Count != 0; } }
     
     private void Awake()
     {
+        receiverIndices = new int[10];
+        for (int i = 0; i < 10; i++)
+        {
+            receiverIndices[i] = -1;
+        }
 
         uiManager = FindObjectOfType<UIManager>();
         nodeParent = transform.Find("nodeParent");
@@ -157,8 +165,8 @@ public class CustomSystem : MonoBehaviour
                 electronInfos.Clear();
                 for (int i = 0; i < activeNodes.Count; i++)
                 {
-                    NormalNode node = activeNodes[i];
-                    if(ReactionManager.Instance.activeNodes[i].electrons.Count != 0)
+                    Node node = activeNodes[i];
+                    if(ReactionManager.Instance.activeNodes[i].waitingElectrons.Count != 0)
                     {
                         electronInfos.Add(new ElectronInfo() { node_ = node });
                     }
@@ -201,7 +209,12 @@ public class CustomSystem : MonoBehaviour
 
         for (int i = 0; i < activeNodes.Count; i++)
         {
-            activeNodes[i].electrons.Clear();
+            activeNodes[i].waitingElectrons.Clear();
+
+            if(activeNodes[i].NodeType == NodeType.Receiver)
+            {
+                activeNodes[i].GetComponent<Receiver>().ResetReceiver();
+            }
         }
 
         for (int i = 0; i < lineParent.childCount; i++)
@@ -232,7 +245,7 @@ public class CustomSystem : MonoBehaviour
             disableNodeSlots[i].gameObject.SetActive(true);
             disableNodeSlots[i].ClearNode();
         }
-
+        uiManager.ClearAllReceiverCodes();
         disableNodeSlots.Clear();
 
         for (int i = 0; i < lineParent.childCount; i++)
@@ -274,6 +287,7 @@ public class CustomSystem : MonoBehaviour
         if (Input.GetMouseButton(0))
         {
             if (currentNode.NodeType == NodeType.WayPoint) return;
+            if (currentNode.NodeType == NodeType.Receiver) return;
             inputState = InputState.DrawLine;
         }
     }
@@ -282,17 +296,17 @@ public class CustomSystem : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Delete))
         {
-            if(currentNode.electrons.Count == 0)
+            if(currentNode.waitingElectrons.Count == 0)
             {
                 return;
             }
 
-            for (int i = 0; i < currentNode.electrons.Count; i++)
+            for (int i = 0; i < currentNode.waitingElectrons.Count; i++)
             {
-                Destroy(currentNode.electrons[i].gameObject);
+                Destroy(currentNode.waitingElectrons[i].gameObject);
             }
 
-            currentNode.electrons.Clear();
+            currentNode.waitingElectrons.Clear();
             hasDeletedSth = true;
         }
     }
@@ -309,6 +323,13 @@ public class CustomSystem : MonoBehaviour
             {
                 Line line = currentNode.lineInfos[i].line;
                 line.DeleteLine();
+            }
+
+            if(currentNode.NodeType == NodeType.Receiver)
+            {
+                int receiverIndex = currentNode.GetComponent<Receiver>().ReceiverIndex;
+                receiverIndices[receiverIndex] = -1;
+                uiManager.RemoveReceiver(receiverIndex);
             }
 
             Destroy(currentNode.gameObject);
@@ -343,16 +364,26 @@ public class CustomSystem : MonoBehaviour
                     nodeSlot.SetNode(switchNode);
                     switchNode.Setup(nodeSlot.GlobalIndex, nodeSlot);
                     switchNode.BeSelect();
+                    //get old node's electron
+                    for (int i = 0; i < currentNode.waitingElectrons.Count; i++)
+                    {
+                        switchNode.waitingElectrons.Add(currentNode.waitingElectrons[i]);
+                    }
                     // delete old node
                     Destroy(currentNode.gameObject);
                     currentNode = switchNode;
                     break;
                 case NodeType.Switch:
                     // setup new node
-                    NormalNode normalNode = Instantiate(pfNode, currentNode.transform.position, Quaternion.identity, nodeParent).GetComponent<NormalNode>();
+                    Node normalNode = Instantiate(pfNode, currentNode.transform.position, Quaternion.identity, nodeParent).GetComponent<Node>();
                     nodeSlot.SetNode(normalNode);
                     normalNode.Setup(nodeSlot.GlobalIndex, nodeSlot);
                     normalNode.BeSelect();
+                    //get old node's electron
+                    for (int i = 0; i < currentNode.waitingElectrons.Count; i++)
+                    {
+                        normalNode.waitingElectrons.Add(currentNode.waitingElectrons[i]);
+                    }
                     // delete old node
                     Destroy(currentNode.gameObject);
                     currentNode = normalNode;
@@ -370,7 +401,7 @@ public class CustomSystem : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.N))
             {
-                NormalNode node = Instantiate(pfNode, currentNodeSlot.transform.position, Quaternion.identity, nodeParent).GetComponent<NormalNode>();
+                Node node = Instantiate(pfNode, currentNodeSlot.transform.position, Quaternion.identity, nodeParent).GetComponent<Node>();
                 node.Setup(currentNodeSlot.GlobalIndex, currentNodeSlot);
                 currentNodeSlot.SetNode(node);
                 currentNodeSlot.gameObject.SetActive(false);
@@ -405,6 +436,31 @@ public class CustomSystem : MonoBehaviour
                 currentNodeSlot.CancelSelecting();
                 currentNodeSlot = null;
                 return;
+            }
+
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                int index = 0;
+                for (int i = 0; i < receiverIndices.Length; i++)
+                {
+                    if (receiverIndices[i] == -1)
+                    {
+                        index = i;
+                        uiManager.AddNewReceiver(index);
+                        receiverIndices[i] = 0;
+                        break;
+                    }
+                }
+                Receiver receiver = Instantiate(pfReceiver, currentNodeSlot.transform.position, Quaternion.identity, nodeParent).GetComponent<Receiver>();
+                receiver.ReceiverIndex = index;
+
+                receiver.Setup(currentNodeSlot.GlobalIndex, currentNodeSlot);
+                currentNodeSlot.SetNode(receiver);
+                currentNodeSlot.gameObject.SetActive(false);
+                disableNodeSlots.Add(currentNodeSlot);
+                inputState = InputState.NullSelect;
+                currentNodeSlot.CancelSelecting();
+                currentNodeSlot = null;
             }
         }
     }
@@ -443,7 +499,7 @@ public class CustomSystem : MonoBehaviour
             GameObject nodeObj = InputHelper.GetObjectUnderPosition(nodeLayer, position);
             if(nodeObj != null)
             {
-                if(nodeObj.GetComponent<NormalNode>().NodeType == NodeType.WayPoint)
+                if(nodeObj.GetComponent<Node>().NodeType == NodeType.WayPoint)
                 {
                     WayPointNode wayPoint = nodeObj.GetComponent<WayPointNode>();
                     currentWayPoint = wayPoint;
@@ -482,7 +538,7 @@ public class CustomSystem : MonoBehaviour
             GameObject nodeObj = InputHelper.GetObjectUnderPosition(nodeLayer, position);
             if (nodeObj)
             {
-                NormalNode node = nodeObj.GetComponent<NormalNode>();
+                Node node = nodeObj.GetComponent<Node>();
                 if (currentNode.IsConnectValid(node) && node.NodeType != NodeType.WayPoint)
                 {
                     currentNode.FinishDraw(node);
@@ -527,7 +583,7 @@ public class CustomSystem : MonoBehaviour
             if (nodeObj)
             {
                 CancelAllSelect();
-                NormalNode node = nodeObj.GetComponent<NormalNode>();
+                Node node = nodeObj.GetComponent<Node>();
                 node.BeSelect();
                 currentNode = node;
                 inputState = InputState.NodeSelect;
@@ -580,6 +636,6 @@ public class CustomSystem : MonoBehaviour
     [Serializable]
     public class ElectronInfo
     {
-        public NormalNode node_;
+        public Node node_;
     }
 }

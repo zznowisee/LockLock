@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SwitchNode : NormalNode
+public class SwitchNode : Node
 {
     public List<SwitchNode> combineNodes;
     public List<Line> combineLines;
@@ -21,9 +21,6 @@ public class SwitchNode : NormalNode
     void Awake()
     {
         switchWarning = transform.Find("sprite").Find("switchWarning");
-        beSelectGraphic = transform.Find("sprite").Find("beSelectGraphic");
-
-        customSystem = FindObjectOfType<CustomSystem>();
     }
 
     public override void Setup(Vector2Int nodeIndex, NodeSlot nodeSlot)
@@ -101,12 +98,12 @@ public class SwitchNode : NormalNode
         }
 
         LineInfo lineInfo = nodeInfo.drawingLine.lineInfo;
-        Vector2 pos = InputHelper.CalculateEndPosition(InputHelper.MouseWorldPositionIn2D, lineInfo.wayPointNodes.Count == 0 ? (NormalNode)this : lineInfo.wayPointNodes[lineInfo.wayPointNodes.Count - 1]);
+        Vector2 pos = InputHelper.CalculateEndPosition(InputHelper.MouseWorldPositionIn2D, lineInfo.wayPointNodes.Count == 0 ? (Node)this : lineInfo.wayPointNodes[lineInfo.wayPointNodes.Count - 1]);
         nodeAnimationManager.CheckLineEndPosition(pos);
         nodeInfo.drawingLine.Draw(pos);
     }
 
-    public override void FinishDraw(NormalNode nextNode)
+    public override void FinishDraw(Node nextNode)
     {
         nodeInfo.drawingLine.FinishLine(nextNode);
         Connect(nextNode);
@@ -117,7 +114,7 @@ public class SwitchNode : NormalNode
         CheckSwitchWarning();
     }
 
-    public override void Connect(NormalNode connectNode)
+    public override void Connect(Node connectNode)
     {
         if(nodeInfo.drawingLine.GetLineState() == LineState.SwitchLine)
         {
@@ -170,14 +167,14 @@ public class SwitchNode : NormalNode
     {
         if(redLine != null)
         {
-            NormalNode node = GetNodeFromConnectingNodesWithLine(redLine);
+            Node node = GetNodeFromConnectingNodesWithLine(redLine);
             GameObject red = redLine.gameObject;
             Disconnect(node, redLine);
             Destroy(red);
         }
         if(blueLine != null)
         {
-            NormalNode node = GetNodeFromConnectingNodesWithLine(blueLine);
+            Node node = GetNodeFromConnectingNodesWithLine(blueLine);
             GameObject blue = blueLine.gameObject;
             Disconnect(node, blueLine);
             Destroy(blue);
@@ -190,7 +187,7 @@ public class SwitchNode : NormalNode
         CheckSwitchWarning();
     }
 
-    public override void Disconnect(NormalNode deleteNode, Line line)
+    public override void Disconnect(Node deleteNode, Line line)
     {
         if(line.GetLineState() == LineState.SwitchLine)
         {
@@ -259,7 +256,7 @@ public class SwitchNode : NormalNode
         CheckSwitchWarning();
     }
 
-    public void SwitchByCombineNode(List<Line> changedLines, List<NormalNode> changedNodes)
+    public void SwitchByCombineNode(List<Line> changedLines, List<Node> changedNodes)
     {
         if (changedNodes.Contains(this))
         {
@@ -294,7 +291,7 @@ public class SwitchNode : NormalNode
     public void Switch()
     {
         List<Line> changedLines = new List<Line>();
-        List<NormalNode> changedNodes = new List<NormalNode>();
+        List<Node> changedNodes = new List<Node>();
 
         SwitchVisual();
         changedLines.Add(blueLine);

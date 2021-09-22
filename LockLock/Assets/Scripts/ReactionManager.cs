@@ -7,8 +7,9 @@ public class ReactionManager : MonoBehaviour
     CustomSystem customSystem;
 
     public static ReactionManager Instance;
-    public List<NormalNode> activeNodes;
-    public List<Electron> activeElectrons;
+    public List<Node> activeNodes;
+    public List<Line> activeLines;
+    [HideInInspector] public List<Electron> activeElectrons;
     public int desiredElectronNumbers = 0;
 
     bool isRunning = true;
@@ -17,6 +18,8 @@ public class ReactionManager : MonoBehaviour
     {
         Instance = this;
         customSystem = FindObjectOfType<CustomSystem>();
+        activeLines = new List<Line>();
+        activeLines = new List<Line>();
     }
 
     public void SwitchGameModeToRun()
@@ -79,6 +82,11 @@ public class ReactionManager : MonoBehaviour
 
     IEnumerator NodesReactions()
     {
+        for (int i = 0; i < activeLines.Count; i++)
+        {
+            activeLines[i].ResetToInit();
+        }
+
         for (int i = 0; i < activeNodes.Count; i++)
         {
             activeNodes[i].Reaction();
@@ -95,11 +103,11 @@ public class ReactionManager : MonoBehaviour
         {
             for (int i = 0; i < activeNodes.Count; i++)
             {
-                for (int j = 0; j < activeNodes[i].electrons.Count; j++)
+                for (int j = 0; j < activeNodes[i].waitingElectrons.Count; j++)
                 {
-                    activeNodes[i].electrons[j].MoveTo();
+                    activeNodes[i].waitingElectrons[j].MoveTo();
                 }
-                activeNodes[i].electrons.Clear();
+                activeNodes[i].waitingElectrons.Clear();
             }
         }
     }

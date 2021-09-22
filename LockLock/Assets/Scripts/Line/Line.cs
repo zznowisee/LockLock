@@ -19,8 +19,8 @@ public class Line : MonoBehaviour
     bool addWayPoint = false;
 
     // Direction base
-    protected NormalNode dirStartNode;
-    protected NormalNode dirEndNode;
+    protected Node dirStartNode;
+    protected Node dirEndNode;
 
     protected bool isOnewayLine = false;
     bool hasChangeDirection = false;
@@ -60,7 +60,7 @@ public class Line : MonoBehaviour
 
     public bool IsOneWayLine() => isOnewayLine;
 
-    public bool CanPassBaseOnOneWay(NormalNode currentStartNode)
+    public bool CanPassBaseOnOneWay(Node currentStartNode)
     {
         return currentStartNode == dirStartNode;
     }
@@ -78,7 +78,7 @@ public class Line : MonoBehaviour
 
     }
 
-    public void Setup(NormalNode startNode, LineState lineState)
+    public void Setup(Node startNode, LineState lineState)
     {
         hasBeenSetup = true;
 
@@ -154,7 +154,7 @@ public class Line : MonoBehaviour
         lineVisual.Material.color = palette.defaultCol;
     }
 
-    public virtual void FinishLine(NormalNode endNode)
+    public virtual void FinishLine(Node endNode)
     {
         lineVisual.ConnectNode(endNode.transform.position - transform.position);
 
@@ -205,7 +205,7 @@ public class Line : MonoBehaviour
         }
     }
 
-    public NormalNode GetTargetFromStartNode(NormalNode startNode)
+    public Node GetTargetFromStartNode(Node startNode)
     {
         if(startNode == lineInfo.startNode)
         {
@@ -218,6 +218,9 @@ public class Line : MonoBehaviour
 
         return null;
     }
+
+    public void OnEnable() => ReactionManager.Instance.activeLines.Add(this);
+    public void OnDisable() => ReactionManager.Instance.activeLines.Remove(this);
 }
 
 [System.Serializable]
@@ -226,12 +229,12 @@ public class LineInfo
     public LineState lineState;
     public List<WayPointNode> wayPointNodes;
     public Line line;
-    public NormalNode startNode;
-    public NormalNode endNode;
+    public Node startNode;
+    public Node endNode;
     public bool canPass;
     public Vector2 CenterPos { get { return (startNode.transform.position + endNode.transform.position) / 2f; } }
     public bool HasWayPointsInLine { get { return wayPointNodes.Count > 0; } }
-    public LineInfo(Line line_, NormalNode startNode_, bool canPass_, LineState lineState_)
+    public LineInfo(Line line_, Node startNode_, bool canPass_, LineState lineState_)
     {
         wayPointNodes = new List<WayPointNode>();
         line = line_;
@@ -255,7 +258,7 @@ public class LineInfo
         wayPointNodes.Remove(wayPoint);
     }
 
-    public NormalNode GetAnotherNode(NormalNode node)
+    public Node GetAnotherNode(Node node)
     {
         if (node == startNode)
             return endNode;
@@ -265,12 +268,12 @@ public class LineInfo
             return null;
     }
 
-    public bool IsTwoNodeMatch(NormalNode n1, NormalNode n2)
+    public bool IsTwoNodeMatch(Node n1, Node n2)
     {
         return (n1 == startNode && n2 == endNode) || (n1 == endNode && n2 == startNode);
     }
 
-    public NormalNode GetTargetNode(WayPointNode wayPointNode, NormalNode enterNode)
+    public Node GetTargetNode(WayPointNode wayPointNode, Node enterNode)
     {
         if(startNode == enterNode)
         {
