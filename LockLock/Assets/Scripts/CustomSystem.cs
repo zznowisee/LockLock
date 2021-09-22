@@ -153,7 +153,6 @@ public class CustomSystem : MonoBehaviour
     }
 
     #region Buttons
-
     public void RunPauseBtn()
     {
         switch (gameState)
@@ -168,7 +167,8 @@ public class CustomSystem : MonoBehaviour
                     Node node = activeNodes[i];
                     if(ReactionManager.Instance.activeNodes[i].waitingElectrons.Count != 0)
                     {
-                        electronInfos.Add(new ElectronInfo() { node_ = node });
+                        ElectronType type = ReactionManager.Instance.activeNodes[i].waitingElectrons[0].Type;
+                        electronInfos.Add(new ElectronInfo() { node_ = node, type_ = type });
                     }
                 }
                 break;
@@ -226,6 +226,7 @@ public class CustomSystem : MonoBehaviour
         {
             Electron e = Instantiate(pfElectron, electronInfos[i].node_.transform.position, Quaternion.identity, electronParent).GetComponent<Electron>();
             electronInfos[i].node_.AddElectron(e);
+            e.SetupElectronType(electronInfos[i].type_);
         }
     }
 
@@ -342,6 +343,14 @@ public class CustomSystem : MonoBehaviour
         {
             Electron electron = Instantiate(pfElectron, currentNode.transform.position, Quaternion.identity, electronParent).GetComponent<Electron>();
             currentNode.AddElectron(electron);
+            electron.Setup(currentNode, ElectronType.PlusOne);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            Electron electron = Instantiate(pfElectron, currentNode.transform.position, Quaternion.identity, electronParent).GetComponent<Electron>();
+            currentNode.AddElectron(electron);
+            electron.Setup(currentNode, ElectronType.MinusOne);
         }
     }
     void SwitchNodeState()
@@ -637,5 +646,6 @@ public class CustomSystem : MonoBehaviour
     public class ElectronInfo
     {
         public Node node_;
+        public ElectronType type_;
     }
 }

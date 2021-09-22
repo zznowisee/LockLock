@@ -67,9 +67,9 @@ public class SwitchLine : Line
         switchVisualMark = mark.transform;
 
         gameObject.name = Name;
-        print($"Setup New SwitchLine StartNode : '{ lineInfo.startNode.gameObject.name }' " +
+/*        print($"Setup New SwitchLine StartNode : '{ lineInfo.startNode.gameObject.name }' " +
               $"SwitchState Is '{ switchLineState }'" +
-              $"EndNode : '{ lineInfo.endNode.gameObject.name }'");
+              $"EndNode : '{ lineInfo.endNode.gameObject.name }'");*/
     }
 
     public override void CancelSelecting()

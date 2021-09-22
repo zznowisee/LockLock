@@ -163,8 +163,8 @@ public class Line : MonoBehaviour
         lineInfo.endNode = endNode;
 
         gameObject.name = Name;
-        print($"Setup New NormalLine StartNode : '{ lineInfo.startNode.gameObject.name }' " +
-              $"EndNode : '{ lineInfo.endNode.gameObject.name }'");
+/*        print($"Setup New NormalLine StartNode : '{ lineInfo.startNode.gameObject.name }' " +
+              $"EndNode : '{ lineInfo.endNode.gameObject.name }'");*/
     }
 
     public void DeleteLine()

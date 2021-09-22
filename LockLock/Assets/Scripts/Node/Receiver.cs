@@ -37,27 +37,25 @@ public class Receiver : Node
     {
         int minusOneNum = 0;
         int plusOneNum = 0;
-        int zeroNum = 0;
+
         for (int i = 0; i < waitingElectrons.Count; i++)
         {
             switch (waitingElectrons[i].Type)
             {
                 case ElectronType.MinusOne:
-                    minusOneNum++;
+                    minusOneNum = 1;
                     break;
                 case ElectronType.PlusOne:
-                    plusOneNum++;
-                    break;
-                case ElectronType.Zero:
-                    zeroNum++;
+                    plusOneNum = 1;
                     break;
             }
 
             Destroy(waitingElectrons[i].gameObject);
         }
+
         waitingElectrons.Clear();
 
-        int result = minusOneNum * -1 + plusOneNum * 1 + zeroNum * 0;
+        int result = minusOneNum * -1 + plusOneNum * 1;
         return result.ToString();
     }
 

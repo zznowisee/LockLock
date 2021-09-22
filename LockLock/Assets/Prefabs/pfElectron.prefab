@@ -297,10 +297,10 @@ MonoBehaviour:
   startNode: {fileID: 0}
   lastNode: {fileID: 0}
   passingLine: {fileID: 0}
-  level: 0
   canMeet: 0
   minusOneMat: {fileID: 2100000, guid: 26ea18425320a9f489704345eb05eef4, type: 2}
   plusOneMat: {fileID: 2100000, guid: 7bc7d979d19fec9408bbf0a63b819d0a, type: 2}
+  zeroMat: {fileID: 2100000, guid: ec3c64ddc9d9fd4498de976bb0a99367, type: 2}
 --- !u!114 &7327379177921668203
 MonoBehaviour:
   m_ObjectHideFlags: 0

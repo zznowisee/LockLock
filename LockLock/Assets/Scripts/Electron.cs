@@ -16,21 +16,18 @@ public class Electron : MonoBehaviour
     public Node lastNode;
     public Line passingLine;
 
-    public int level = 0;
     public bool canMeet = false;
 
     public Material minusOneMat;
     public Material plusOneMat;
+    public Material zeroMat;
 
     MeshRenderer meshRenderer;
 
-    public void SetupInfo(Node startNode_, int level_, Line passingLine_)
+    public void SetupElectronType(ElectronType type_)
     {
-        startNode = startNode_;
-        level = level_;
-        passingLine = passingLine_;
-        meshRenderer = transform.Find("sprite").Find("insideSprite").GetComponent<MeshRenderer>();
-        Type = ElectronType.PlusOne;
+        Type = type_;
+
         switch (Type)
         {
             case ElectronType.MinusOne:
@@ -39,7 +36,29 @@ public class Electron : MonoBehaviour
             case ElectronType.PlusOne:
                 meshRenderer.material = plusOneMat;
                 break;
+            case ElectronType.Zero:
+                meshRenderer.material = zeroMat;
+                break;
         }
+    }
+
+    void Awake()
+    {
+        meshRenderer = transform.Find("sprite").Find("insideSprite").GetComponent<MeshRenderer>();
+    }
+
+    public void Setup(Node startNode_, ElectronType type_)
+    {
+        startNode = startNode_;
+        Type = type_;
+        SetupElectronType(type_);
+    }
+
+    public void SetupInNode(Node startNode_, Line passingLine_, ElectronType type_)
+    {
+        startNode = startNode_;
+        passingLine = passingLine_;
+        SetupElectronType(type_);
 
         target = passingLine.GetTargetFromStartNode(startNode);
     }

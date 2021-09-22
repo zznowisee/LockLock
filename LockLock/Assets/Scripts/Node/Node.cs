@@ -66,6 +66,10 @@ public class Node : MonoBehaviour
         Connect(nextNode);
 
         CancelSelecting();
+        if(nextNode.GetComponent<NodeAnimationManager>() != null)
+        {
+            nextNode.GetComponent<NodeAnimationManager>().CancelSelectByLine();
+        }
         nodeInfo.drawingLine = null;
     }
 
@@ -215,7 +219,7 @@ public class Node : MonoBehaviour
 
     public void AddElectron(Electron electron) => waitingElectrons.Add(electron);
 
-    void Split(List<Node> targets)
+    void Split(List<Node> targets, ElectronType type)
     {
         for (int i = 0; i < targets.Count; i++)
         {
@@ -223,12 +227,48 @@ public class Node : MonoBehaviour
 
             Line line = GetLineFromConnectingNodesWithNode(targets[i]);
             line.passingElectrons.Add(electron);
-            electron.SetupInfo(this, 0, line);
+            electron.SetupInNode(this, line, type);
 
             waitingElectrons.Add(electron);
 
             ReactionManager.Instance.RegisterElectron();
         }
+    }
+
+    ElectronType CalculateElectronType()
+    {
+        bool hasPlusOne = false;
+        bool hasMinusOne = false;
+        bool hasZero = false;
+        for (int i = 0; i < waitingElectrons.Count; i++)
+        {
+            switch (waitingElectrons[i].Type)
+            {
+                case ElectronType.MinusOne:
+                    if (hasMinusOne) continue;
+                    hasMinusOne = true;
+                    break;
+                case ElectronType.PlusOne:
+                    if (hasPlusOne) continue;
+                    hasPlusOne = true;
+                    break;
+                case ElectronType.Zero:
+                    if (hasZero) continue;
+                    hasZero = true;
+                    break;
+            }
+        }
+
+        if (!hasPlusOne && hasMinusOne && hasZero) return ElectronType.PlusOne;
+        if (hasPlusOne && !hasMinusOne && hasZero) return ElectronType.MinusOne;
+
+        if (hasPlusOne && !hasMinusOne && !hasZero) return ElectronType.PlusOne;
+        if (!hasPlusOne && hasMinusOne && !hasZero) return ElectronType.MinusOne;
+
+        if (hasPlusOne && hasMinusOne && hasZero) return ElectronType.Zero;
+        if (hasPlusOne && hasMinusOne && !hasZero) return ElectronType.Zero;
+        if (!hasPlusOne && !hasMinusOne && hasZero) return ElectronType.Zero;
+        return ElectronType.MinusOne;
     }
 
     List<Node> GetPreNodesAndCombine()
@@ -252,9 +292,10 @@ public class Node : MonoBehaviour
     {
         if (waitingElectrons.Count != 0)
         {
+            ElectronType type = CalculateElectronType();
             List<Node> preNodes = GetPreNodesAndCombine();
             List<Node> targets = GetTargetsBaseOnPreNodes(preNodes);
-            Split(targets);
+            Split(targets, type);
         }
     }
 
