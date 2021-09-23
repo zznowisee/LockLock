@@ -41,7 +41,7 @@ public class WayPointNode : Node
         {
             for (int i = 0; i < waitingElectrons.Count; i++)
             {
-                ReactionManager.Instance.RegisterElectron();
+                ReactionManager.Instance.AddDesiredElectron();
                 Electron electron = waitingElectrons[i];
                 Node target = electron.passingLine.lineInfo.GetTargetNode(this, electron.startNode);
                 electron.SetupInWayPoint(this ,target);

@@ -58,8 +58,6 @@ public class CustomSystem : MonoBehaviour
     [HideInInspector] public Transform lineParent;
 
     public int[] receiverIndices;
-
-    public bool HasElectronsLeft { get { return activeElectrons.Count != 0; } }
     
     private void Awake()
     {
@@ -79,7 +77,6 @@ public class CustomSystem : MonoBehaviour
     {
         switchInfos = new List<SwitchInfo>();
         disableNodeSlots = new List<NodeSlot>();
-        activeElectrons = new List<Electron>();
         electronInfos = new List<ElectronInfo>();
 
         activeNodes = ReactionManager.Instance.activeNodes;

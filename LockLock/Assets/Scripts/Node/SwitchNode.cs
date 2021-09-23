@@ -110,7 +110,10 @@ public class SwitchNode : Node
 
         CancelSelecting();
         nodeInfo.drawingLine = null;
-
+        if (nextNode.GetComponent<NodeAnimationManager>() != null)
+        {
+            nextNode.GetComponent<NodeAnimationManager>().CancelSelectByLine();
+        }
         CheckSwitchWarning();
     }
 

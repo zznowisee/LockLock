@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public enum ElectronType { MinusOne, PlusOne, Zero }
 
@@ -9,6 +10,8 @@ public class Electron : MonoBehaviour
     [SerializeField] float duration = 1f;
     [SerializeField] float easeAmount;
 
+    public event Action OnElectronArriveNode; 
+
     public ElectronType Type { get; private set; }
 
     Node target;
@@ -16,7 +19,8 @@ public class Electron : MonoBehaviour
     public Node lastNode;
     public Line passingLine;
 
-    public bool canMeet = false;
+    public bool willMeetOtherElectron = false;
+    public bool needToDestroy = false;
 
     public Material minusOneMat;
     public Material plusOneMat;
@@ -71,42 +75,45 @@ public class Electron : MonoBehaviour
 
     public void MoveTo()
     {
-        StartCoroutine(MoveToTarget());
-        canMeet = passingLine.CanMeet;
+        willMeetOtherElectron = passingLine.CanMeet;
+        needToDestroy = passingLine.NeedToDestroy();
+        StartCoroutine(OnceMoving());
     }
 
-    IEnumerator MoveToTarget()
+    IEnumerator OnceMoving()
     {
-        float percent = 0f;
-        Vector3 startPosition = lastNode == null ? startNode.transform.position : lastNode.transform.position;
-        Vector2 endPosition = passingLine.CanMeet ? startPosition : target.transform.position;
-        Vector3 middlePosition = (target.transform.position + startPosition) / 2f;
+        Vector3 startPosition = transform.position;
+        Vector3 middlePosition = (target.transform.position + transform.position) / 2f;
+        Vector3 endPosition = target.transform.position;
+        startNode.RemoveElectron(this);
+        yield return StartCoroutine(MoveToTarget(middlePosition));
 
-        while (percent < 1f)
+        if (willMeetOtherElectron)
         {
-            percent += Time.deltaTime / duration * 2f;
-            percent = Mathf.Clamp01(percent);
-            float easePercent = Utils.Ease(percent, easeAmount);
-            transform.position = Vector3.Lerp(startPosition, middlePosition, easePercent);
-            yield return null;
+            if (needToDestroy)
+            {
+                passingLine.passingElectrons.Clear();
+                OnElectronArriveNode?.Invoke();
+                Destroy(gameObject);
+            }
+            else
+            {
+                yield return StartCoroutine(MoveToTarget(startPosition));
+                ArriveNode();
+            }
         }
-
-        percent = 0f;
-
-        while (percent < 1f)
+        else
         {
-            percent += Time.deltaTime / duration * 2f;
-            percent = Mathf.Clamp01(percent);
-            float easePercent = Utils.Ease(percent, easeAmount);
-            transform.position = Vector3.Lerp(middlePosition, endPosition, easePercent);
-            yield return null;
+            yield return StartCoroutine(MoveToTarget(endPosition));
+            ArriveNode();
         }
+    }
 
-        if (passingLine.CanMeet) print($"Change target by { target.gameObject.name } to {startNode.gameObject.name}");
-
+    void ArriveNode()
+    {
         if (target.NodeType != NodeType.WayPoint)
         {
-            if(passingLine.lineInfo.lineState == LineState.SwitchLine)
+            if (passingLine.lineInfo.lineState == LineState.SwitchLine)
             {
                 SwitchNode sw = passingLine.lineInfo.startNode.GetComponent<SwitchNode>();
                 FindObjectOfType<CustomSystem>().AddSwitchInfo(sw);
@@ -115,10 +122,25 @@ public class Electron : MonoBehaviour
         }
 
         target.RegisterNewElectron(this);
-        ReactionManager.Instance.Check();
+        OnElectronArriveNode?.Invoke();
     }
 
-    void OnEnable() => ReactionManager.Instance.activeElectrons.Add(this);
-    void OnDisable() => ReactionManager.Instance.activeElectrons.Remove(this);
+    IEnumerator MoveToTarget(Vector3 position)
+    {
+        float percent = 0f;
+        Vector3 startPosition = transform.position;
+
+        while (percent < 1f)
+        {
+            percent += Time.deltaTime / duration * 2f;
+            percent = Mathf.Clamp01(percent);
+            float easePercent = Utils.Ease(percent, easeAmount);
+            transform.position = Vector3.Lerp(startPosition, position, easePercent);
+            yield return null;
+        }
+    }
+
+    void OnEnable() => ReactionManager.Instance.RegisterElectrons(this);
+    void OnDisable() => ReactionManager.Instance.UnregisterElectron(this);
 }
 

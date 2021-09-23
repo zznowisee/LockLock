@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class ReactionManager : MonoBehaviour
 {
@@ -51,28 +52,9 @@ public class ReactionManager : MonoBehaviour
         StopAllCoroutines();
     }
 
-    public void RegisterElectron()
+    public void AddDesiredElectron()
     {
         desiredElectronNumbers++;
-    }
-
-    public void Check()
-    {
-        desiredElectronNumbers--;
-        if (customSystem.HasElectronsLeft)
-        {
-            if (desiredElectronNumbers == 0)
-            {
-                if (isRunning)
-                {
-                    StartCoroutine(NodesReactions());
-                }
-                else
-                {
-                    ResetReaction();
-                }
-            }
-        }
     }
 
     void ResetReaction()
@@ -94,21 +76,44 @@ public class ReactionManager : MonoBehaviour
 
         yield return new WaitForEndOfFrame();
 
-        if (!customSystem.HasElectronsLeft)
+        if (activeElectrons.Count == 0)
         {
             customSystem.NoElectronsLeft();
             ResetReaction();
         }
         else
         {
-            for (int i = 0; i < activeNodes.Count; i++)
+            for (int i = 0; i < activeElectrons.Count; i++)
             {
-                for (int j = 0; j < activeNodes[i].waitingElectrons.Count; j++)
-                {
-                    activeNodes[i].waitingElectrons[j].MoveTo();
-                }
-                activeNodes[i].waitingElectrons.Clear();
+                activeElectrons[i].MoveTo();
             }
         }
+    }
+
+    public void RegisterElectrons(Electron e)
+    {
+        activeElectrons.Add(e);
+        e.OnElectronArriveNode += ElectronArriveNode;
+    }
+
+    void ElectronArriveNode()
+    {
+        desiredElectronNumbers--;
+        if (desiredElectronNumbers == 0)
+        {
+            if (isRunning)
+            {
+                StartCoroutine(NodesReactions());
+            }
+            else
+            {
+                ResetReaction();
+            }
+        }
+    }
+
+    public void UnregisterElectron(Electron e)
+    {
+        activeElectrons.Remove(e);
     }
 }

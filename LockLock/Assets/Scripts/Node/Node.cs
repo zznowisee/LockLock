@@ -217,6 +217,7 @@ public class Node : MonoBehaviour
         AddElectron(e);
     }
 
+    public void RemoveElectron(Electron electron) => waitingElectrons.Remove(electron);
     public void AddElectron(Electron electron) => waitingElectrons.Add(electron);
 
     void Split(List<Node> targets, ElectronType type)
@@ -231,7 +232,7 @@ public class Node : MonoBehaviour
 
             waitingElectrons.Add(electron);
 
-            ReactionManager.Instance.RegisterElectron();
+            ReactionManager.Instance.AddDesiredElectron();
         }
     }
 

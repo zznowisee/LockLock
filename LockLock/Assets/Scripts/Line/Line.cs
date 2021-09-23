@@ -58,6 +58,20 @@ public class Line : MonoBehaviour
         passingElectrons.Clear();
     }
 
+    public bool NeedToDestroy()
+    {
+        if (passingElectrons.Count <= 1)
+        {
+            return true;
+        }
+        else
+        {
+            ElectronType typeA = passingElectrons[0].Type;
+            ElectronType typeB = passingElectrons[1].Type;
+            return typeA != typeB;
+        }
+    }
+
     public bool IsOneWayLine() => isOnewayLine;
 
     public bool CanPassBaseOnOneWay(Node currentStartNode)
